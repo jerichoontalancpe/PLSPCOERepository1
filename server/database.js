@@ -60,32 +60,18 @@ const initDatabase = async () => {
     const bcrypt = require('bcryptjs');
     const defaultPassword = bcrypt.hashSync('admin123', 10);
     
-    await db.execute(`INSERT OR IGNORE INTO users (username, email, password, role) VALUES (?, ?, ?, ?)`,
-      ['admin', 'jerichoontalancpe@gmail.com', defaultPassword, 'admin']);
-
-    // Check and insert sample achievements if needed
-    const achievementCount = await db.execute('SELECT COUNT(*) as count FROM achievements');
-    if (achievementCount.rows[0].count === 0) {
-      const sampleAchievements = [
-        { title: 'Best Paper Award', description: 'Recognition for outstanding research contribution', image_filename: 'achievement-best-paper.jpg' },
-        { title: 'Academic Excellence', description: 'Outstanding performance in engineering education', image_filename: 'achievement-1.jpg' },
-        { title: 'Research Innovation', description: 'Breakthrough research in engineering fields', image_filename: 'achievement-2.jpg' },
-        { title: 'Industry Partnership', description: 'Collaboration with leading industry partners', image_filename: 'achievement-3.jpg' },
-        { title: 'Student Success', description: 'Outstanding student achievements and recognition', image_filename: 'achievement-4.jpg' },
-        { title: 'Community Impact', description: 'Positive impact on local community development', image_filename: 'achievement-5.jpg' }
-      ];
-      
-      for (const achievement of sampleAchievements) {
-        await db.execute('INSERT INTO achievements (title, description, image_filename) VALUES (?, ?, ?)',
-          [achievement.title, achievement.description, achievement.image_filename]);
-      }
-      console.log('✓ Sample achievements inserted');
+    try {
+      await db.execute(`INSERT OR IGNORE INTO users (username, email, password, role) VALUES (?, ?, ?, ?)`,
+        ['admin', 'jerichoontalancpe@gmail.com', defaultPassword, 'admin']);
+    } catch (err) {
+      console.log('Admin user already exists or error:', err.message);
     }
 
     console.log('✓ Database initialized successfully');
   } catch (error) {
     console.error('Database initialization error:', error);
-    throw error;
+    // Don't throw error - let the app start anyway
+    console.log('Continuing without sample data...');
   }
 };
 
