@@ -237,7 +237,7 @@ const Home = () => {
           {stats ? (
             <div className="stats-grid">
               <div className="stat-card">
-                <div className="stat-number">{stats.total}</div>
+                <div className="stat-number">{stats?.total || 0}</div>
                 <div className="stat-label">Total Projects</div>
               </div>
               <div className="stat-card">
@@ -249,7 +249,7 @@ const Home = () => {
                 <div className="stat-label">Years of Research</div>
               </div>
               <div className="stat-card">
-                <div className="stat-number">{Math.floor(stats.total * 2.5)}</div>
+                <div className="stat-number">{Math.floor((stats?.total || 0) * 2.5)}</div>
                 <div className="stat-label">Student Contributors</div>
               </div>
             </div>
