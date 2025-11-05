@@ -156,7 +156,7 @@ const Repository = () => {
           </div>
         ) : (
           <div className="projects-grid">
-            {projects.map(project => (
+            {(projects || []).map(project => (
               <Link 
                 key={project.id} 
                 to={`/project/${project.id}`}

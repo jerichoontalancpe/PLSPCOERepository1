@@ -186,7 +186,7 @@ const About = () => {
               gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
               gap: '2rem'
             }}>
-              {achievements.map((achievement) => (
+              {(achievements || []).map((achievement) => (
                 <div key={achievement.id} style={{
                   background: 'white',
                   borderRadius: '12px',
