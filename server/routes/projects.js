@@ -36,7 +36,7 @@ const upload = multer({
 });
 
 // Get all projects with filters
-router.get('/', (req, res) => {
+router.get('/', async (req, res) => {
   const { search, department, project_type, year, status } = req.query;
   
   let query = 'SELECT * FROM projects WHERE 1=1';
@@ -65,23 +65,27 @@ router.get('/', (req, res) => {
 
   query += ' ORDER BY year DESC, title ASC';
 
-  db.all(query, params, (err, projects) => {
-    if (err) return res.status(500).json({ error: 'Database error' });
-    res.json(projects);
-  });
+  try {
+    const result = await db.execute(query, params);
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: 'Database error' });
+  }
 });
 
 // Get single project
-router.get('/:id', (req, res) => {
-  db.get('SELECT * FROM projects WHERE id = ?', [req.params.id], (err, project) => {
-    if (err) return res.status(500).json({ error: 'Database error' });
-    if (!project) return res.status(404).json({ error: 'Project not found' });
-    res.json(project);
-  });
+router.get('/:id', async (req, res) => {
+  try {
+    const result = await db.execute('SELECT * FROM projects WHERE id = ?', [req.params.id]);
+    if (result.rows.length === 0) return res.status(404).json({ error: 'Project not found' });
+    res.json(result.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: 'Database error' });
+  }
 });
 
 // Create project (admin only)
-router.post('/', verifyToken, upload.single('pdf'), (req, res) => {
+router.post('/', verifyToken, upload.single('pdf'), async (req, res) => {
   const { title, authors, adviser, year, abstract, keywords, department, project_type, status } = req.body;
   const pdf_filename = req.file ? req.file.filename : null;
 
@@ -89,15 +93,16 @@ router.post('/', verifyToken, upload.single('pdf'), (req, res) => {
     (title, authors, adviser, year, abstract, keywords, department, project_type, status, pdf_filename)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
-  db.run(query, [title, authors, adviser, year, abstract, keywords, department, project_type, status || 'completed', pdf_filename], 
-    function(err) {
-      if (err) return res.status(500).json({ error: 'Database error' });
-      res.json({ id: this.lastID, message: 'Project created successfully' });
-    });
+  try {
+    const result = await db.execute(query, [title, authors, adviser, year, abstract, keywords, department, project_type, status || 'completed', pdf_filename]);
+    res.json({ id: result.lastInsertRowid, message: 'Project created successfully' });
+  } catch (err) {
+    res.status(500).json({ error: 'Database error' });
+  }
 });
 
 // Update project (admin only)
-router.put('/:id', verifyToken, upload.single('pdf'), (req, res) => {
+router.put('/:id', verifyToken, upload.single('pdf'), async (req, res) => {
   const { title, authors, adviser, year, abstract, keywords, department, project_type, status } = req.body;
   const pdf_filename = req.file ? req.file.filename : undefined;
 
@@ -115,24 +120,28 @@ router.put('/:id', verifyToken, upload.single('pdf'), (req, res) => {
   query += ' WHERE id = ?';
   params.push(req.params.id);
 
-  db.run(query, params, function(err) {
-    if (err) return res.status(500).json({ error: 'Database error' });
-    if (this.changes === 0) return res.status(404).json({ error: 'Project not found' });
+  try {
+    const result = await db.execute(query, params);
+    if (result.rowsAffected === 0) return res.status(404).json({ error: 'Project not found' });
     res.json({ message: 'Project updated successfully' });
-  });
+  } catch (err) {
+    res.status(500).json({ error: 'Database error' });
+  }
 });
 
 // Delete project (admin only)
-router.delete('/:id', verifyToken, (req, res) => {
-  db.run('DELETE FROM projects WHERE id = ?', [req.params.id], function(err) {
-    if (err) return res.status(500).json({ error: 'Database error' });
-    if (this.changes === 0) return res.status(404).json({ error: 'Project not found' });
+router.delete('/:id', verifyToken, async (req, res) => {
+  try {
+    const result = await db.execute('DELETE FROM projects WHERE id = ?', [req.params.id]);
+    if (result.rowsAffected === 0) return res.status(404).json({ error: 'Project not found' });
     res.json({ message: 'Project deleted successfully' });
-  });
+  } catch (err) {
+    res.status(500).json({ error: 'Database error' });
+  }
 });
 
 // Get statistics
-router.get('/stats/overview', (req, res) => {
+router.get('/stats/overview', async (req, res) => {
   const queries = [
     'SELECT COUNT(*) as total FROM projects',
     'SELECT department, COUNT(*) as count FROM projects GROUP BY department',
@@ -140,23 +149,19 @@ router.get('/stats/overview', (req, res) => {
     'SELECT year, COUNT(*) as count FROM projects GROUP BY year ORDER BY year DESC'
   ];
 
-  Promise.all(queries.map(query => 
-    new Promise((resolve, reject) => {
-      db.all(query, (err, rows) => {
-        if (err) reject(err);
-        else resolve(rows);
-      });
-    })
-  )).then(([total, byDept, byType, byYear]) => {
+  try {
+    const results = await Promise.all(queries.map(query => db.execute(query)));
+    const [total, byDept, byType, byYear] = results.map(result => result.rows);
+    
     res.json({
       total: total[0].total,
       byDepartment: byDept,
       byProjectType: byType,
       byYear: byYear
     });
-  }).catch(err => {
+  } catch (err) {
     res.status(500).json({ error: 'Database error' });
-  });
+  }
 });
 
 module.exports = router;

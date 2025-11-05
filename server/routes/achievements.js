@@ -36,27 +36,31 @@ const upload = multer({
 });
 
 // Get all achievements
-router.get('/', (req, res) => {
-  db.all('SELECT * FROM achievements ORDER BY created_at DESC', (err, achievements) => {
-    if (err) return res.status(500).json({ error: 'Database error' });
-    res.json(achievements);
-  });
+router.get('/', async (req, res) => {
+  try {
+    const result = await db.execute('SELECT * FROM achievements ORDER BY created_at DESC');
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: 'Database error' });
+  }
 });
 
 // Create achievement (admin only)
-router.post('/', verifyToken, upload.single('image'), (req, res) => {
+router.post('/', verifyToken, upload.single('image'), async (req, res) => {
   const { title, description } = req.body;
   const image_filename = req.file ? req.file.filename : null;
 
-  db.run('INSERT INTO achievements (title, description, image_filename) VALUES (?, ?, ?)',
-    [title, description, image_filename], function(err) {
-      if (err) return res.status(500).json({ error: 'Database error' });
-      res.json({ id: this.lastID, message: 'Achievement created successfully' });
-    });
+  try {
+    const result = await db.execute('INSERT INTO achievements (title, description, image_filename) VALUES (?, ?, ?)',
+      [title, description, image_filename]);
+    res.json({ id: result.lastInsertRowid, message: 'Achievement created successfully' });
+  } catch (err) {
+    res.status(500).json({ error: 'Database error' });
+  }
 });
 
 // Update achievement (admin only)
-router.put('/:id', verifyToken, upload.single('image'), (req, res) => {
+router.put('/:id', verifyToken, upload.single('image'), async (req, res) => {
   const { title, description } = req.body;
   const image_filename = req.file ? req.file.filename : undefined;
 
@@ -71,20 +75,24 @@ router.put('/:id', verifyToken, upload.single('image'), (req, res) => {
   query += ' WHERE id = ?';
   params.push(req.params.id);
 
-  db.run(query, params, function(err) {
-    if (err) return res.status(500).json({ error: 'Database error' });
-    if (this.changes === 0) return res.status(404).json({ error: 'Achievement not found' });
+  try {
+    const result = await db.execute(query, params);
+    if (result.rowsAffected === 0) return res.status(404).json({ error: 'Achievement not found' });
     res.json({ message: 'Achievement updated successfully' });
-  });
+  } catch (err) {
+    res.status(500).json({ error: 'Database error' });
+  }
 });
 
 // Delete achievement (admin only)
-router.delete('/:id', verifyToken, (req, res) => {
-  db.run('DELETE FROM achievements WHERE id = ?', [req.params.id], function(err) {
-    if (err) return res.status(500).json({ error: 'Database error' });
-    if (this.changes === 0) return res.status(404).json({ error: 'Achievement not found' });
+router.delete('/:id', verifyToken, async (req, res) => {
+  try {
+    const result = await db.execute('DELETE FROM achievements WHERE id = ?', [req.params.id]);
+    if (result.rowsAffected === 0) return res.status(404).json({ error: 'Achievement not found' });
     res.json({ message: 'Achievement deleted successfully' });
-  });
+  } catch (err) {
+    res.status(500).json({ error: 'Database error' });
+  }
 });
 
 module.exports = router;

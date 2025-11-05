@@ -9,17 +9,15 @@ const router = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET || 'plsp_secret_key';
 
 // Login
-router.post('/login', (req, res) => {
+router.post('/login', async (req, res) => {
   const { username, password } = req.body;
 
-  // Check if login is by username or email
-  db.get('SELECT * FROM users WHERE username = ? OR email = ?', [username, username], (err, user) => {
-    if (err) {
-      console.error('Database error:', err);
-      return res.status(500).json({ error: 'Database error' });
-    }
-    if (!user) return res.status(401).json({ error: 'Invalid credentials' });
-
+  try {
+    // Check if login is by username or email
+    const result = await db.execute('SELECT * FROM users WHERE username = ? OR email = ?', [username, username]);
+    if (result.rows.length === 0) return res.status(401).json({ error: 'Invalid credentials' });
+    
+    const user = result.rows[0];
     bcrypt.compare(password, user.password, (err, isMatch) => {
       if (err) {
         console.error('Password comparison error:', err);
@@ -38,7 +36,10 @@ router.post('/login', (req, res) => {
         } 
       });
     });
-  });
+  } catch (err) {
+    console.error('Database error:', err);
+    res.status(500).json({ error: 'Database error' });
+  }
 });
 
 // Request password reset
