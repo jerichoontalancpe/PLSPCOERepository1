@@ -36,10 +36,16 @@ const upload = multer({
   }
 });
 
-// Get all projects - use simple storage that works
-router.get('/', (req, res) => {
-  console.log('Getting projects from simple storage');
-  res.json(storage.projects);
+// Get all projects - try database first, fallback to simple storage
+router.get('/', async (req, res) => {
+  try {
+    const result = await db.execute('SELECT * FROM projects ORDER BY year DESC, title ASC');
+    console.log('Projects loaded from database:', result.rows.length);
+    res.json(result.rows);
+  } catch (err) {
+    console.log('Database failed, using simple storage:', err.message);
+    res.json(storage.projects);
+  }
 });
 
 // Get single project
@@ -53,32 +59,49 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// Create project - use simple storage that works
-router.post('/', upload.single('pdf'), (req, res) => {
-  console.log('Creating project with simple storage');
+// Create project - try database first, fallback to simple storage
+router.post('/', upload.single('pdf'), async (req, res) => {
+  console.log('Creating project');
   console.log('Body:', req.body);
   
   const { title, authors, adviser, year, abstract, keywords, department, project_type, status } = req.body;
   const pdf_filename = req.file ? req.file.filename : null;
 
-  const project = storage.addProject({
-    title,
-    authors,
-    adviser: adviser || '',
-    year: parseInt(year),
-    abstract: abstract || '',
-    keywords: keywords || '',
-    department,
-    project_type,
-    status: status || 'completed',
-    pdf_filename
-  });
+  try {
+    const result = await db.execute(
+      `INSERT INTO projects 
+      (title, authors, adviser, year, abstract, keywords, department, project_type, status, pdf_filename)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [title, authors, adviser || '', year, abstract || '', keywords || '', department, project_type, status || 'completed', pdf_filename]
+    );
+    
+    console.log('Project saved to database:', result.lastInsertRowid);
+    res.json({ 
+      id: result.lastInsertRowid, 
+      message: 'Project created successfully' 
+    });
+  } catch (err) {
+    console.error('Database failed, using simple storage:', err.message);
+    
+    const project = storage.addProject({
+      title,
+      authors,
+      adviser: adviser || '',
+      year: parseInt(year),
+      abstract: abstract || '',
+      keywords: keywords || '',
+      department,
+      project_type,
+      status: status || 'completed',
+      pdf_filename
+    });
 
-  console.log('Project added to storage:', project);
-  res.json({ 
-    id: project.id, 
-    message: 'Project created successfully' 
-  });
+    console.log('Project added to simple storage:', project.id);
+    res.json({ 
+      id: project.id, 
+      message: 'Project created successfully' 
+    });
+  }
 });
 
 // Update project (admin only)
