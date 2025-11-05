@@ -369,7 +369,7 @@ const AdminDashboard = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {projects.map(project => (
+                  {(projects || []).map(project => (
                     <tr key={project.id} style={{ borderBottom: '1px solid #e2e8f0' }}>
                       <td style={{ padding: '1rem' }}>
                         <div style={{ fontWeight: '500', color: '#1e3a8a' }}>{project.title}</div>
@@ -428,7 +428,7 @@ const AdminDashboard = () => {
                 gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
                 gap: '1.5rem'
               }}>
-                {achievements.map(achievement => (
+                {(achievements || []).map(achievement => (
                   <div key={achievement.id} style={{
                     background: '#f8fafc',
                     borderRadius: '8px',
