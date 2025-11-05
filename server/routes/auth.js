@@ -62,20 +62,21 @@ router.post('/forgot-password', async (req, res) => {
     if (process.env.NODE_ENV === 'development') {
       return res.json({ 
         message: 'Development mode: Use this reset link',
-            resetUrl: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/reset-password?token=${resetToken}`
-          });
-        }
-
-        // Production mode - send email
-        const emailResult = await sendPasswordResetEmail(email, resetToken);
-        
-        if (emailResult.success) {
-          res.json({ message: 'Password reset email sent' });
-        } else {
-          res.status(500).json({ error: 'Failed to send email' });
-        }
+        resetUrl: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/reset-password?token=${resetToken}`
       });
-  });
+    }
+
+    // Production mode - send email
+    const emailResult = await sendPasswordResetEmail(email, resetToken);
+    
+    if (emailResult.success) {
+      res.json({ message: 'Password reset email sent' });
+    } else {
+      res.status(500).json({ error: 'Failed to send email' });
+    }
+  } catch (err) {
+    res.status(500).json({ error: 'Database error' });
+  }
 });
 
 // Reset password
