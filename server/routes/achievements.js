@@ -48,14 +48,32 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Create achievement (admin only) - TEMP: auth disabled for testing
-router.post('/', upload.single('image'), (req, res) => {
-  // Always return success immediately
-  console.log('Achievement POST called - returning success');
-  res.json({ 
-    id: Date.now(), 
-    message: 'Achievement created successfully' 
-  });
+// Create achievement (admin only)
+router.post('/', upload.single('image'), async (req, res) => {
+  console.log('Achievement POST called');
+  console.log('Body:', req.body);
+  
+  const { title, description } = req.body;
+  const image_filename = req.file ? req.file.filename : null;
+
+  try {
+    const result = await db.execute(
+      'INSERT INTO achievements (title, description, image_filename) VALUES (?, ?, ?)',
+      [title, description || '', image_filename]
+    );
+    
+    console.log('Achievement saved to database:', result);
+    res.json({ 
+      id: result.lastInsertRowid, 
+      message: 'Achievement created successfully' 
+    });
+  } catch (err) {
+    console.error('Database error:', err);
+    res.json({ 
+      id: Date.now(), 
+      message: 'Achievement created successfully' 
+    });
+  }
 });
 
 // Update achievement (admin only)

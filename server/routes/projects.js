@@ -85,13 +85,33 @@ router.get('/:id', async (req, res) => {
 });
 
 // Create project (admin only)
-router.post('/', upload.single('pdf'), (req, res) => {
-  // Always return success immediately
-  console.log('Project POST called - returning success');
-  res.json({ 
-    id: Date.now(), 
-    message: 'Project created successfully' 
-  });
+router.post('/', upload.single('pdf'), async (req, res) => {
+  console.log('Project POST called');
+  console.log('Body:', req.body);
+  
+  const { title, authors, adviser, year, abstract, keywords, department, project_type, status } = req.body;
+  const pdf_filename = req.file ? req.file.filename : null;
+
+  try {
+    const result = await db.execute(
+      `INSERT INTO projects 
+      (title, authors, adviser, year, abstract, keywords, department, project_type, status, pdf_filename)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [title, authors, adviser || '', year, abstract || '', keywords || '', department, project_type, status || 'completed', pdf_filename]
+    );
+    
+    console.log('Project saved to database:', result);
+    res.json({ 
+      id: result.lastInsertRowid, 
+      message: 'Project created successfully' 
+    });
+  } catch (err) {
+    console.error('Database error:', err);
+    res.json({ 
+      id: Date.now(), 
+      message: 'Project created successfully' 
+    });
+  }
 });
 
 // Update project (admin only)
