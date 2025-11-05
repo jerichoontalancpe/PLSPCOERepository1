@@ -43,26 +43,25 @@ router.post('/login', async (req, res) => {
 });
 
 // Request password reset
-router.post('/forgot-password', (req, res) => {
+router.post('/forgot-password', async (req, res) => {
   const { email } = req.body;
 
-  db.get('SELECT * FROM users WHERE email = ?', [email], async (err, user) => {
-    if (err) return res.status(500).json({ error: 'Database error' });
-    if (!user) return res.status(404).json({ error: 'Email not found' });
+  try {
+    const result = await db.execute('SELECT * FROM users WHERE email = ?', [email]);
+    if (result.rows.length === 0) return res.status(404).json({ error: 'Email not found' });
 
     // Generate reset token
     const resetToken = crypto.randomBytes(32).toString('hex');
     const expiresAt = new Date(Date.now() + 3600000); // 1 hour
 
     // Save reset token
-    db.run('INSERT INTO password_resets (email, token, expires_at) VALUES (?, ?, ?)',
-      [email, resetToken, expiresAt], async (err) => {
-        if (err) return res.status(500).json({ error: 'Database error' });
+    await db.execute('INSERT INTO password_resets (email, token, expires_at) VALUES (?, ?, ?)',
+      [email, resetToken, expiresAt]);
 
-        // Development mode - skip email, return token directly
-        if (process.env.NODE_ENV === 'development') {
-          return res.json({ 
-            message: 'Development mode: Use this reset link',
+    // Development mode - skip email, return token directly
+    if (process.env.NODE_ENV === 'development') {
+      return res.json({ 
+        message: 'Development mode: Use this reset link',
             resetUrl: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/reset-password?token=${resetToken}`
           });
         }
@@ -80,28 +79,28 @@ router.post('/forgot-password', (req, res) => {
 });
 
 // Reset password
-router.post('/reset-password', (req, res) => {
+router.post('/reset-password', async (req, res) => {
   const { token, newPassword } = req.body;
 
-  db.get('SELECT * FROM password_resets WHERE token = ? AND expires_at > datetime("now") AND used = 0',
-    [token], (err, resetRecord) => {
-      if (err) return res.status(500).json({ error: 'Database error' });
-      if (!resetRecord) return res.status(400).json({ error: 'Invalid or expired token' });
+  try {
+    const result = await db.execute('SELECT * FROM password_resets WHERE token = ? AND expires_at > datetime("now") AND used = 0', [token]);
+    if (result.rows.length === 0) return res.status(400).json({ error: 'Invalid or expired token' });
 
-      // Hash new password
-      const hashedPassword = bcrypt.hashSync(newPassword, 10);
+    const resetRecord = result.rows[0];
+    
+    // Hash new password
+    const hashedPassword = bcrypt.hashSync(newPassword, 10);
 
-      // Update user password
-      db.run('UPDATE users SET password = ? WHERE email = ?',
-        [hashedPassword, resetRecord.email], (err) => {
-          if (err) return res.status(500).json({ error: 'Database error' });
+    // Update user password
+    await db.execute('UPDATE users SET password = ? WHERE email = ?', [hashedPassword, resetRecord.email]);
 
-          // Mark token as used
-          db.run('UPDATE password_resets SET used = 1 WHERE token = ?', [token]);
+    // Mark token as used
+    await db.execute('UPDATE password_resets SET used = 1 WHERE token = ?', [token]);
 
-          res.json({ message: 'Password reset successful' });
-        });
-    });
+    res.json({ message: 'Password reset successful' });
+  } catch (err) {
+    res.status(500).json({ error: 'Database error' });
+  }
 });
 
 // Middleware to verify token
