@@ -1,9 +1,27 @@
 const { createClient } = require('@libsql/client');
 
-const db = createClient({
-  url: process.env.TURSO_DATABASE_URL || 'file:plsp_repository.db',
-  authToken: process.env.TURSO_AUTH_TOKEN,
-});
+// Create database client with proper error handling
+let db;
+try {
+  if (process.env.TURSO_DATABASE_URL && process.env.TURSO_AUTH_TOKEN) {
+    console.log('Using Turso cloud database');
+    db = createClient({
+      url: process.env.TURSO_DATABASE_URL,
+      authToken: process.env.TURSO_AUTH_TOKEN,
+    });
+  } else {
+    console.log('Using local SQLite database');
+    db = createClient({
+      url: 'file:plsp_repository.db'
+    });
+  }
+} catch (error) {
+  console.error('Database client creation failed:', error);
+  // Fallback to local file
+  db = createClient({
+    url: 'file:plsp_repository.db'
+  });
+}
 
 const initDatabase = async () => {
   try {
