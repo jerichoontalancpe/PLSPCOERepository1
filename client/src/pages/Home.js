@@ -5,7 +5,11 @@ import axios from 'axios';
 
 const Home = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [stats, setStats] = useState(null);
+  const [stats, setStats] = useState({
+    total: 0,
+    byDepartment: [],
+    byYear: []
+  });
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -237,11 +241,11 @@ const Home = () => {
                 <div className="stat-label">Total Projects</div>
               </div>
               <div className="stat-card">
-                <div className="stat-number">{stats.byDepartment.length}</div>
+                <div className="stat-number">{stats?.byDepartment?.length || 0}</div>
                 <div className="stat-label">Departments</div>
               </div>
               <div className="stat-card">
-                <div className="stat-number">{stats.byYear.length}</div>
+                <div className="stat-number">{stats?.byYear?.length || 0}</div>
                 <div className="stat-label">Years of Research</div>
               </div>
               <div className="stat-card">
