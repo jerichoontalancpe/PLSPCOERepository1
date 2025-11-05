@@ -12,7 +12,7 @@ const About = () => {
 
   const fetchAchievements = async () => {
     try {
-      const response = await axios.get('/api/achievements');
+      const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/achievements`);
       setAchievements(response.data);
     } catch (error) {
       console.error('Error fetching achievements:', error);
