@@ -4,6 +4,7 @@ const path = require('path');
 const fs = require('fs');
 const { db } = require('../database');
 const { verifyToken } = require('./auth');
+const storage = require('../simple-storage');
 
 const router = express.Router();
 
@@ -35,42 +36,10 @@ const upload = multer({
   }
 });
 
-// Get all projects with filters
-router.get('/', async (req, res) => {
-  const { search, department, project_type, year, status } = req.query;
-  
-  let query = 'SELECT * FROM projects WHERE 1=1';
-  let params = [];
-
-  if (search) {
-    query += ' AND (title LIKE ? OR authors LIKE ? OR keywords LIKE ?)';
-    params.push(`%${search}%`, `%${search}%`, `%${search}%`);
-  }
-  if (department) {
-    query += ' AND department = ?';
-    params.push(department);
-  }
-  if (project_type) {
-    query += ' AND project_type = ?';
-    params.push(project_type);
-  }
-  if (year) {
-    query += ' AND year = ?';
-    params.push(year);
-  }
-  if (status) {
-    query += ' AND status = ?';
-    params.push(status);
-  }
-
-  query += ' ORDER BY year DESC, title ASC';
-
-  try {
-    const result = await db.execute(query, params);
-    res.json(result.rows);
-  } catch (err) {
-    res.status(500).json({ error: 'Database error' });
-  }
+// Get all projects - use simple storage that works
+router.get('/', (req, res) => {
+  console.log('Getting projects from simple storage');
+  res.json(storage.projects);
 });
 
 // Get single project
@@ -84,34 +53,32 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// Create project (admin only)
-router.post('/', upload.single('pdf'), async (req, res) => {
-  console.log('Project POST called');
+// Create project - use simple storage that works
+router.post('/', upload.single('pdf'), (req, res) => {
+  console.log('Creating project with simple storage');
   console.log('Body:', req.body);
   
   const { title, authors, adviser, year, abstract, keywords, department, project_type, status } = req.body;
   const pdf_filename = req.file ? req.file.filename : null;
 
-  try {
-    const result = await db.execute(
-      `INSERT INTO projects 
-      (title, authors, adviser, year, abstract, keywords, department, project_type, status, pdf_filename)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [title, authors, adviser || '', year, abstract || '', keywords || '', department, project_type, status || 'completed', pdf_filename]
-    );
-    
-    console.log('Project saved to database:', result);
-    res.json({ 
-      id: result.lastInsertRowid, 
-      message: 'Project created successfully' 
-    });
-  } catch (err) {
-    console.error('Database error:', err);
-    res.json({ 
-      id: Date.now(), 
-      message: 'Project created successfully' 
-    });
-  }
+  const project = storage.addProject({
+    title,
+    authors,
+    adviser: adviser || '',
+    year: parseInt(year),
+    abstract: abstract || '',
+    keywords: keywords || '',
+    department,
+    project_type,
+    status: status || 'completed',
+    pdf_filename
+  });
+
+  console.log('Project added to storage:', project);
+  res.json({ 
+    id: project.id, 
+    message: 'Project created successfully' 
+  });
 });
 
 // Update project (admin only)

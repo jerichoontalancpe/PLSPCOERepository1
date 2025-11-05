@@ -4,6 +4,7 @@ const path = require('path');
 const fs = require('fs');
 const { db } = require('../database');
 const { verifyToken } = require('./auth');
+const storage = require('../simple-storage');
 
 const router = express.Router();
 
@@ -35,45 +36,31 @@ const upload = multer({
   }
 });
 
-// Get all achievements
-router.get('/', async (req, res) => {
-  try {
-    console.log('Attempting to fetch achievements...');
-    const result = await db.execute('SELECT * FROM achievements ORDER BY created_at DESC');
-    console.log('Achievements fetched successfully:', result.rows.length);
-    res.json(result.rows);
-  } catch (err) {
-    console.error('Database error in achievements GET:', err);
-    res.status(500).json({ error: 'Database error' });
-  }
+// Get all achievements - use simple storage
+router.get('/', (req, res) => {
+  console.log('Getting achievements from simple storage');
+  res.json(storage.achievements);
 });
 
-// Create achievement (admin only)
-router.post('/', upload.single('image'), async (req, res) => {
-  console.log('Achievement POST called');
+// Create achievement - use simple storage
+router.post('/', upload.single('image'), (req, res) => {
+  console.log('Creating achievement with simple storage');
   console.log('Body:', req.body);
   
   const { title, description } = req.body;
   const image_filename = req.file ? req.file.filename : null;
 
-  try {
-    const result = await db.execute(
-      'INSERT INTO achievements (title, description, image_filename) VALUES (?, ?, ?)',
-      [title, description || '', image_filename]
-    );
-    
-    console.log('Achievement saved to database:', result);
-    res.json({ 
-      id: result.lastInsertRowid, 
-      message: 'Achievement created successfully' 
-    });
-  } catch (err) {
-    console.error('Database error:', err);
-    res.json({ 
-      id: Date.now(), 
-      message: 'Achievement created successfully' 
-    });
-  }
+  const achievement = storage.addAchievement({
+    title,
+    description: description || '',
+    image_filename
+  });
+
+  console.log('Achievement added to storage:', achievement);
+  res.json({ 
+    id: achievement.id, 
+    message: 'Achievement created successfully' 
+  });
 });
 
 // Update achievement (admin only)
