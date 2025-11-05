@@ -38,23 +38,34 @@ const upload = multer({
 // Get all achievements
 router.get('/', async (req, res) => {
   try {
+    console.log('Attempting to fetch achievements...');
     const result = await db.execute('SELECT * FROM achievements ORDER BY created_at DESC');
+    console.log('Achievements fetched successfully:', result.rows.length);
     res.json(result.rows);
   } catch (err) {
+    console.error('Database error in achievements GET:', err);
     res.status(500).json({ error: 'Database error' });
   }
 });
 
 // Create achievement (admin only)
 router.post('/', verifyToken, upload.single('image'), async (req, res) => {
+  console.log('POST /achievements called');
+  console.log('User:', req.user);
+  console.log('Body:', req.body);
+  console.log('File:', req.file);
+  
   const { title, description } = req.body;
   const image_filename = req.file ? req.file.filename : null;
 
   try {
+    console.log('Attempting to insert achievement...');
     const result = await db.execute('INSERT INTO achievements (title, description, image_filename) VALUES (?, ?, ?)',
       [title, description, image_filename]);
+    console.log('Achievement inserted successfully:', result.lastInsertRowid);
     res.json({ id: result.lastInsertRowid, message: 'Achievement created successfully' });
   } catch (err) {
+    console.error('Database error in achievements POST:', err);
     res.status(500).json({ error: 'Database error' });
   }
 });
