@@ -114,20 +114,42 @@ const AdminDashboard = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    const data = new FormData();
-    Object.keys(formData).forEach(key => {
-      if (key === 'pdf' && formData[key]) {
-        data.append('pdf', formData[key]);
-      } else if (key !== 'pdf') {
-        data.append(key, formData[key]);
-      }
-    });
-
     try {
       if (editingProject) {
-        await axios.put(`/api/projects/${editingProject.id}`, data);
+        // Update existing project
+        const { error } = await supabase
+          .from('projects')
+          .update({
+            title: formData.title,
+            authors: formData.authors,
+            adviser: formData.adviser,
+            year: parseInt(formData.year),
+            abstract: formData.abstract,
+            keywords: formData.keywords,
+            department: formData.department,
+            project_type: formData.project_type,
+            status: formData.status
+          })
+          .eq('id', editingProject.id);
+        
+        if (error) throw error;
       } else {
-        await axios.post('/api/projects', data);
+        // Create new project
+        const { error } = await supabase
+          .from('projects')
+          .insert([{
+            title: formData.title,
+            authors: formData.authors,
+            adviser: formData.adviser,
+            year: parseInt(formData.year),
+            abstract: formData.abstract,
+            keywords: formData.keywords,
+            department: formData.department,
+            project_type: formData.project_type,
+            status: formData.status
+          }]);
+        
+        if (error) throw error;
       }
       
       setShowModal(false);
@@ -137,14 +159,9 @@ const AdminDashboard = () => {
       await fetchStats();
       
       alert('Project saved successfully!');
-      window.dispatchEvent(new CustomEvent('projectsUpdated'));
     } catch (error) {
       console.error('Error saving project:', error);
-      // Always show success for now
-      setShowModal(false);
-      setEditingProject(null);
-      resetForm();
-      alert('Project saved successfully!');
+      alert('Error saving project. Please try again.');
     }
   };
 
@@ -188,18 +205,28 @@ const AdminDashboard = () => {
   const handleAchievementSubmit = async (e) => {
     e.preventDefault();
     
-    const data = new FormData();
-    data.append('title', achievementFormData.title);
-    data.append('description', achievementFormData.description);
-    if (achievementFormData.image) {
-      data.append('image', achievementFormData.image);
-    }
-
     try {
       if (editingAchievement) {
-        await axios.put(`/api/achievements/${editingAchievement.id}`, data);
+        // Update existing achievement
+        const { error } = await supabase
+          .from('achievements')
+          .update({
+            title: achievementFormData.title,
+            description: achievementFormData.description
+          })
+          .eq('id', editingAchievement.id);
+        
+        if (error) throw error;
       } else {
-        await axios.post('/api/achievements', data);
+        // Create new achievement
+        const { error } = await supabase
+          .from('achievements')
+          .insert([{
+            title: achievementFormData.title,
+            description: achievementFormData.description
+          }]);
+        
+        if (error) throw error;
       }
       
       setShowModal(false);
@@ -209,11 +236,7 @@ const AdminDashboard = () => {
       alert('Achievement saved successfully!');
     } catch (error) {
       console.error('Error saving achievement:', error);
-      // Always show success for now
-      setShowModal(false);
-      setEditingAchievement(null);
-      resetAchievementForm();
-      alert('Achievement saved successfully!');
+      alert('Error saving achievement. Please try again.');
     }
   };
 
