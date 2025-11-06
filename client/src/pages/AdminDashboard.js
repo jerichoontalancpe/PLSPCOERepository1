@@ -141,13 +141,18 @@ const AdminDashboard = () => {
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this project?')) {
       try {
-        await axios.delete(`/api/projects/${id}`);
-        await fetchProjects(); // Reload from database
-        await fetchStats();
-        window.dispatchEvent(new CustomEvent('projectsUpdated'));
-        alert('Project deleted successfully!');
+        const response = await fetch(`https://plspcoerepository1.onrender.com/api/projects/${id}`, {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' }
+        });
+        
+        if (response.ok) {
+          setProjects(projects.filter(p => p.id !== id));
+          alert('Project deleted successfully!');
+        } else {
+          throw new Error('Delete failed');
+        }
       } catch (error) {
-        console.error('Error deleting project:', error);
         alert('Error deleting project. Please try again.');
       }
     }
@@ -198,11 +203,18 @@ const AdminDashboard = () => {
   const handleDeleteAchievement = async (id) => {
     if (window.confirm('Are you sure you want to delete this achievement?')) {
       try {
-        await axios.delete(`/api/achievements/${id}`);
-        await fetchAchievements(); // Reload from database
-        alert('Achievement deleted successfully!');
+        const response = await fetch(`https://plspcoerepository1.onrender.com/api/achievements/${id}`, {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' }
+        });
+        
+        if (response.ok) {
+          setAchievements(achievements.filter(a => a.id !== id));
+          alert('Achievement deleted successfully!');
+        } else {
+          throw new Error('Delete failed');
+        }
       } catch (error) {
-        console.error('Error deleting achievement:', error);
         alert('Error deleting achievement. Please try again.');
       }
     }
