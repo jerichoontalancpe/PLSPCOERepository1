@@ -140,16 +140,25 @@ const AdminDashboard = () => {
 
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this project?')) {
-      // Remove from UI immediately
-      const updatedProjects = projects.filter(p => p.id !== id);
-      setProjects(updatedProjects);
-      
-      // Try backend delete (don't wait for it)
-      fetch(`https://plspcoerepository1.onrender.com/api/projects/${id}`, {
-        method: 'DELETE'
-      }).catch(() => {});
-      
-      alert('Project deleted successfully!');
+      try {
+        const response = await fetch(`https://plspcoerepository1.onrender.com/api/projects/${id}`, {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' }
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+          // Only remove from UI if database delete succeeded
+          setProjects(projects.filter(p => p.id !== id));
+          alert('Project deleted successfully!');
+        } else {
+          alert('Failed to delete project from database');
+        }
+      } catch (error) {
+        console.error('Delete error:', error);
+        alert('Error deleting project. Please try again.');
+      }
     }
   };
 
@@ -197,16 +206,25 @@ const AdminDashboard = () => {
 
   const handleDeleteAchievement = async (id) => {
     if (window.confirm('Are you sure you want to delete this achievement?')) {
-      // Remove from UI immediately
-      const updatedAchievements = achievements.filter(a => a.id !== id);
-      setAchievements(updatedAchievements);
-      
-      // Try backend delete (don't wait for it)
-      fetch(`https://plspcoerepository1.onrender.com/api/achievements/${id}`, {
-        method: 'DELETE'
-      }).catch(() => {});
-      
-      alert('Achievement deleted successfully!');
+      try {
+        const response = await fetch(`https://plspcoerepository1.onrender.com/api/achievements/${id}`, {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' }
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+          // Only remove from UI if database delete succeeded
+          setAchievements(achievements.filter(a => a.id !== id));
+          alert('Achievement deleted successfully!');
+        } else {
+          alert('Failed to delete achievement from database');
+        }
+      } catch (error) {
+        console.error('Delete error:', error);
+        alert('Error deleting achievement. Please try again.');
+      }
     }
   };
 

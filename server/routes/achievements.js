@@ -108,22 +108,25 @@ router.put('/:id', upload.single('image'), async (req, res) => {
 
 // Delete achievement
 router.delete('/:id', async (req, res) => {
-  console.log('DELETE request received for achievement ID:', req.params.id);
   try {
-    const { error } = await supabase
+    console.log('Deleting achievement with ID:', req.params.id);
+    
+    const { data, error } = await supabase
       .from('achievements')
       .delete()
-      .eq('id', req.params.id);
+      .eq('id', req.params.id)
+      .select();
     
     if (error) {
-      console.error('Supabase delete error:', error);
+      console.error('Supabase error:', error);
       throw error;
     }
-    console.log('Achievement deleted successfully from Supabase');
-    res.json({ message: 'Achievement deleted successfully' });
+    
+    console.log('Successfully deleted achievement from database:', data);
+    res.json({ success: true, message: 'Achievement deleted successfully' });
   } catch (err) {
     console.error('Delete error:', err);
-    res.status(500).json({ error: 'Failed to delete achievement' });
+    res.status(500).json({ success: false, error: err.message });
   }
 });
 

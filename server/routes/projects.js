@@ -183,17 +183,24 @@ router.put('/:id', upload.single('pdf'), async (req, res) => {
 // Delete project
 router.delete('/:id', async (req, res) => {
   try {
-    const { error } = await supabase
+    console.log('Deleting project with ID:', req.params.id);
+    
+    const { data, error } = await supabase
       .from('projects')
       .delete()
-      .eq('id', parseInt(req.params.id));
+      .eq('id', req.params.id)
+      .select();
     
-    if (error) throw error;
+    if (error) {
+      console.error('Supabase error:', error);
+      throw error;
+    }
     
-    res.status(200).json({ success: true, message: 'Project deleted successfully' });
+    console.log('Successfully deleted from database:', data);
+    res.json({ success: true, message: 'Project deleted successfully' });
   } catch (err) {
     console.error('Delete error:', err);
-    res.status(500).json({ success: false, error: 'Failed to delete project' });
+    res.status(500).json({ success: false, error: err.message });
   }
 });
 
