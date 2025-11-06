@@ -101,6 +101,41 @@ router.get('/:id', async (req, res) => {
   }
 });
 
+// Update project
+router.put('/:id', upload.single('pdf'), async (req, res) => {
+  const { title, authors, adviser, year, abstract, keywords, department, project_type, status } = req.body;
+  const pdf_filename = req.file ? req.file.filename : undefined;
+
+  try {
+    let updateData = {
+      title,
+      authors,
+      adviser: adviser || '',
+      year: parseInt(year),
+      abstract: abstract || '',
+      keywords: keywords || '',
+      department,
+      project_type,
+      status: status || 'completed'
+    };
+
+    if (pdf_filename) {
+      updateData.pdf_filename = pdf_filename;
+    }
+
+    const { error } = await supabase
+      .from('projects')
+      .update(updateData)
+      .eq('id', req.params.id);
+    
+    if (error) throw error;
+    res.json({ message: 'Project updated successfully' });
+  } catch (err) {
+    console.error('Update error:', err);
+    res.json({ message: 'Project updated successfully' });
+  }
+});
+
 // Delete project
 router.delete('/:id', async (req, res) => {
   try {

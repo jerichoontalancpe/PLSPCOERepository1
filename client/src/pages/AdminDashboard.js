@@ -128,13 +128,15 @@ const AdminDashboard = () => {
         await fetchStats();
         
         window.dispatchEvent(new CustomEvent('projectsUpdated'));
-      } catch (error) {
-        console.error('Error deleting project:', error);
-        // Always show success for now
+      try {
+        await axios.delete(`/api/projects/${id}`);
         await fetchProjects();
         await fetchStats();
         window.dispatchEvent(new CustomEvent('projectsUpdated'));
         alert('Project deleted successfully!');
+      } catch (error) {
+        console.error('Error deleting project:', error);
+        alert('Error deleting project. Please try again.');
       }
     }
   };
@@ -186,11 +188,13 @@ const AdminDashboard = () => {
       try {
         await axios.delete(`/api/achievements/${id}`);
         await fetchAchievements();
-      } catch (error) {
-        console.error('Error deleting achievement:', error);
-        // Always show success for now
+      try {
+        await axios.delete(`/api/achievements/${id}`);
         await fetchAchievements();
         alert('Achievement deleted successfully!');
+      } catch (error) {
+        console.error('Error deleting achievement:', error);
+        alert('Error deleting achievement. Please try again.');
       }
     }
   };

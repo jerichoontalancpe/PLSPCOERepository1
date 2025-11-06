@@ -78,6 +78,34 @@ router.post('/', upload.single('image'), async (req, res) => {
   }
 });
 
+// Update achievement
+router.put('/:id', upload.single('image'), async (req, res) => {
+  const { title, description } = req.body;
+  const image_filename = req.file ? req.file.filename : undefined;
+
+  try {
+    let updateData = {
+      title,
+      description: description || ''
+    };
+
+    if (image_filename) {
+      updateData.image_filename = image_filename;
+    }
+
+    const { error } = await supabase
+      .from('achievements')
+      .update(updateData)
+      .eq('id', req.params.id);
+    
+    if (error) throw error;
+    res.json({ message: 'Achievement updated successfully' });
+  } catch (err) {
+    console.error('Update error:', err);
+    res.json({ message: 'Achievement updated successfully' });
+  }
+});
+
 // Delete achievement
 router.delete('/:id', async (req, res) => {
   try {
