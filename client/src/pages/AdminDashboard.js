@@ -1,13 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Edit, Trash2, BarChart3, FileText, Users, Calendar, Award } from 'lucide-react';
-import axios from 'axios';
-
-// Configure axios base URL
-const API_BASE_URL = process.env.NODE_ENV === 'production' 
-  ? 'https://plspcoerepository1.onrender.com' 
-  : 'http://localhost:5000';
-
-axios.defaults.baseURL = API_BASE_URL;
+import { supabase } from '../supabase';
 
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('projects');
@@ -57,12 +50,16 @@ const AdminDashboard = () => {
 
   const fetchProjects = async () => {
     try {
-      const response = await axios.get('/api/projects');
-      setProjects(response.data);
+      const { data, error } = await supabase
+        .from('projects')
+        .select('*')
+        .order('year', { ascending: false });
+      
+      if (error) throw error;
+      setProjects(data || []);
     } catch (error) {
       console.error('Error fetching projects:', error);
-    } finally {
-      setLoading(false);
+      setProjects([]);
     }
   };
 
@@ -141,22 +138,18 @@ const AdminDashboard = () => {
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this project?')) {
       try {
-        const response = await fetch(`https://plspcoerepository1.onrender.com/api/projects/${id}`, {
-          method: 'DELETE',
-          headers: { 'Content-Type': 'application/json' }
-        });
+        const { error } = await supabase
+          .from('projects')
+          .delete()
+          .eq('id', id);
         
-        const result = await response.json();
+        if (error) throw error;
         
-        if (result.success) {
-          // Only remove from UI if database delete succeeded
-          setProjects(projects.filter(p => p.id !== id));
-          alert('Project deleted successfully!');
-        } else {
-          alert('Failed to delete project from database');
-        }
+        await fetchProjects();
+        await fetchStats();
+        alert('Project deleted successfully!');
       } catch (error) {
-        console.error('Delete error:', error);
+        console.error('Error deleting project:', error);
         alert('Error deleting project. Please try again.');
       }
     }

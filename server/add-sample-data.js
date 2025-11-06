@@ -4,7 +4,11 @@ async function addSampleData() {
   console.log('Adding sample data...');
   
   try {
-    // Add sample projects
+    // Delete existing data first
+    await supabase.from('projects').delete().neq('id', 0);
+    await supabase.from('achievements').delete().neq('id', 0);
+    
+    // Add correct sample projects
     const { data: projects, error: projectError } = await supabase
       .from('projects')
       .insert([
@@ -15,18 +19,18 @@ async function addSampleData() {
           year: 2024,
           abstract: 'A comprehensive system for managing campus resources and student information.',
           keywords: 'campus management, smart system, IoT',
-          department: 'Computer Science',
+          department: 'Computer Engineering',
           project_type: 'Thesis',
           status: 'completed'
         },
         {
-          title: 'Mobile Learning Application',
+          title: 'Industrial Process Optimization',
           authors: 'Alice Johnson, Bob Wilson',
           adviser: 'Prof. Carlos Rodriguez',
           year: 2023,
-          abstract: 'An innovative mobile application for enhanced learning experiences.',
-          keywords: 'mobile app, education, learning',
-          department: 'Information Technology',
+          abstract: 'An innovative approach to optimizing industrial manufacturing processes.',
+          keywords: 'optimization, manufacturing, efficiency',
+          department: 'Industrial Engineering',
           project_type: 'Capstone',
           status: 'completed'
         }
@@ -44,11 +48,11 @@ async function addSampleData() {
       .insert([
         {
           title: 'Best Thesis Award 2024',
-          description: 'Awarded for outstanding research in Computer Science'
+          description: 'Awarded for outstanding research in Computer Engineering'
         },
         {
           title: 'Innovation Excellence',
-          description: 'Recognition for innovative solutions in technology'
+          description: 'Recognition for innovative solutions in Industrial Engineering'
         }
       ]);
 
