@@ -65,17 +65,47 @@ const AdminDashboard = () => {
 
   const fetchAchievements = async () => {
     try {
-      const response = await axios.get('/api/achievements');
-      setAchievements(response.data);
+      const { data, error } = await supabase
+        .from('achievements')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      setAchievements(data || []);
     } catch (error) {
       console.error('Error fetching achievements:', error);
+      setAchievements([]);
     }
   };
 
   const fetchStats = async () => {
     try {
-      const response = await axios.get('/api/projects/stats/overview');
-      setStats(response.data);
+      const { data: projects, error } = await supabase
+        .from('projects')
+        .select('*');
+      
+      if (error) throw error;
+      
+      const totalProjects = projects.length;
+      const departments = [...new Set(projects.map(p => p.department))].length;
+      const years = [...new Set(projects.map(p => p.year))].length;
+      const contributors = projects.reduce((total, p) => {
+        return total + (p.authors ? p.authors.split(',').length : 0);
+      }, 0);
+      
+      const thesisCount = projects.filter(p => p.project_type === 'Thesis').length;
+      const capstoneCount = projects.filter(p => p.project_type === 'Capstone').length;
+      const researchCount = projects.filter(p => p.project_type === 'Research').length;
+      
+      setStats({
+        totalProjects,
+        departments,
+        years,
+        contributors,
+        thesisCount,
+        capstoneCount,
+        researchCount
+      });
     } catch (error) {
       console.error('Error fetching stats:', error);
     }
