@@ -2,6 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { Plus, Edit, Trash2, BarChart3, FileText, Users, Calendar, Award } from 'lucide-react';
 import axios from 'axios';
 
+// Configure axios base URL
+const API_BASE_URL = process.env.NODE_ENV === 'production' 
+  ? 'https://plspcoerepository1.onrender.com' 
+  : 'http://localhost:5000';
+
+axios.defaults.baseURL = API_BASE_URL;
+
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('projects');
   const [projects, setProjects] = useState([]);

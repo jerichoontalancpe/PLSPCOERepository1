@@ -48,6 +48,39 @@ router.get('/', async (req, res) => {
   }
 });
 
+// Get stats overview
+router.get('/stats/overview', async (req, res) => {
+  try {
+    const { data: projects, error } = await supabase
+      .from('projects')
+      .select('*');
+    
+    if (error) throw error;
+    
+    const totalProjects = projects.length;
+    const departments = [...new Set(projects.map(p => p.department))].length;
+    const years = [...new Set(projects.map(p => p.year))].length;
+    const contributors = projects.reduce((total, p) => {
+      return total + (p.authors ? p.authors.split(',').length : 0);
+    }, 0);
+    
+    res.json({
+      totalProjects,
+      departments,
+      years,
+      contributors
+    });
+  } catch (err) {
+    console.error('Stats error:', err);
+    res.json({
+      totalProjects: 0,
+      departments: 0,
+      years: 0,
+      contributors: 0
+    });
+  }
+});
+
 // Create project
 router.post('/', upload.single('pdf'), async (req, res) => {
   const { title, authors, adviser, year, abstract, keywords, department, project_type, status } = req.body;
