@@ -2,7 +2,7 @@ const express = require('express');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
-const { db } = require('../database');
+const { supabase } = require('../database');
 
 const router = express.Router();
 
@@ -35,8 +35,13 @@ const upload = multer({
 // Get all achievements
 router.get('/', async (req, res) => {
   try {
-    const result = await db.execute('SELECT * FROM achievements ORDER BY created_at DESC');
-    res.json(result.rows);
+    const { data, error } = await supabase
+      .from('achievements')
+      .select('*')
+      .order('created_at', { ascending: false });
+    
+    if (error) throw error;
+    res.json(data || []);
   } catch (err) {
     console.error('Database error:', err);
     res.json([]);
@@ -49,13 +54,19 @@ router.post('/', upload.single('image'), async (req, res) => {
   const image_filename = req.file ? req.file.filename : null;
 
   try {
-    const result = await db.execute(
-      'INSERT INTO achievements (title, description, image_filename) VALUES (?, ?, ?)',
-      [title, description || '', image_filename]
-    );
+    const { data, error } = await supabase
+      .from('achievements')
+      .insert([{
+        title,
+        description: description || '',
+        image_filename
+      }])
+      .select();
+    
+    if (error) throw error;
     
     res.json({ 
-      id: result.lastInsertRowid, 
+      id: data[0].id, 
       message: 'Achievement created successfully' 
     });
   } catch (err) {

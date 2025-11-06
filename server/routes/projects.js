@@ -2,7 +2,7 @@ const express = require('express');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
-const { db } = require('../database');
+const { supabase } = require('../database');
 
 const router = express.Router();
 
@@ -35,8 +35,13 @@ const upload = multer({
 // Get all projects
 router.get('/', async (req, res) => {
   try {
-    const result = await db.execute('SELECT * FROM projects ORDER BY year DESC, title ASC');
-    res.json(result.rows);
+    const { data, error } = await supabase
+      .from('projects')
+      .select('*')
+      .order('year', { ascending: false });
+    
+    if (error) throw error;
+    res.json(data || []);
   } catch (err) {
     console.error('Database error:', err);
     res.json([]);
@@ -49,15 +54,26 @@ router.post('/', upload.single('pdf'), async (req, res) => {
   const pdf_filename = req.file ? req.file.filename : null;
 
   try {
-    const result = await db.execute(
-      `INSERT INTO projects 
-      (title, authors, adviser, year, abstract, keywords, department, project_type, status, pdf_filename)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [title, authors, adviser || '', year, abstract || '', keywords || '', department, project_type, status || 'completed', pdf_filename]
-    );
+    const { data, error } = await supabase
+      .from('projects')
+      .insert([{
+        title,
+        authors,
+        adviser: adviser || '',
+        year: parseInt(year),
+        abstract: abstract || '',
+        keywords: keywords || '',
+        department,
+        project_type,
+        status: status || 'completed',
+        pdf_filename
+      }])
+      .select();
+    
+    if (error) throw error;
     
     res.json({ 
-      id: result.lastInsertRowid, 
+      id: data[0].id, 
       message: 'Project created successfully' 
     });
   } catch (err) {
@@ -72,11 +88,16 @@ router.post('/', upload.single('pdf'), async (req, res) => {
 // Get single project
 router.get('/:id', async (req, res) => {
   try {
-    const result = await db.execute('SELECT * FROM projects WHERE id = ?', [req.params.id]);
-    if (result.rows.length === 0) return res.status(404).json({ error: 'Project not found' });
-    res.json(result.rows[0]);
+    const { data, error } = await supabase
+      .from('projects')
+      .select('*')
+      .eq('id', req.params.id)
+      .single();
+    
+    if (error) throw error;
+    res.json(data);
   } catch (err) {
-    res.status(500).json({ error: 'Database error' });
+    res.status(404).json({ error: 'Project not found' });
   }
 });
 

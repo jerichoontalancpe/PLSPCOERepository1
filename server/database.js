@@ -1,96 +1,54 @@
-const { createClient } = require('@libsql/client');
-
-// Create database client with proper error handling
-let db;
-try {
-  if (process.env.TURSO_DATABASE_URL && process.env.TURSO_AUTH_TOKEN) {
-    console.log('Using Turso cloud database');
-    db = createClient({
-      url: process.env.TURSO_DATABASE_URL,
-      authToken: process.env.TURSO_AUTH_TOKEN,
-    });
-  } else {
-    console.log('Using local SQLite database');
-    db = createClient({
-      url: 'file:plsp_repository.db'
-    });
-  }
-} catch (error) {
-  console.error('Database client creation failed:', error);
-  // Fallback to local file
-  db = createClient({
-    url: 'file:plsp_repository.db'
-  });
-}
+const { supabase } = require('./supabase');
 
 const initDatabase = async () => {
   try {
-    // Users table
-    await db.execute(`CREATE TABLE IF NOT EXISTS users (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      username TEXT UNIQUE NOT NULL,
-      email TEXT UNIQUE,
-      password TEXT NOT NULL,
-      role TEXT DEFAULT 'admin',
-      reset_token TEXT,
-      reset_token_expires DATETIME,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    )`);
-
-    // Password reset tokens table
-    await db.execute(`CREATE TABLE IF NOT EXISTS password_resets (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      email TEXT NOT NULL,
-      token TEXT NOT NULL,
-      expires_at DATETIME NOT NULL,
-      used BOOLEAN DEFAULT 0,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    )`);
-
-    // Projects table
-    await db.execute(`CREATE TABLE IF NOT EXISTS projects (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      title TEXT NOT NULL,
-      authors TEXT NOT NULL,
-      adviser TEXT,
-      year INTEGER NOT NULL,
-      abstract TEXT,
-      keywords TEXT,
-      department TEXT NOT NULL,
-      project_type TEXT NOT NULL,
-      status TEXT DEFAULT 'completed',
-      pdf_filename TEXT,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    )`);
-
-    // Achievements table
-    await db.execute(`CREATE TABLE IF NOT EXISTS achievements (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      title TEXT NOT NULL,
-      description TEXT,
-      image_filename TEXT,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    )`);
-
-    // Create default admin user
-    const bcrypt = require('bcryptjs');
-    const defaultPassword = bcrypt.hashSync('admin123', 10);
+    console.log('✓ Supabase connected successfully');
     
-    try {
-      await db.execute(`INSERT OR IGNORE INTO users (username, email, password, role) VALUES (?, ?, ?, ?)`,
-        ['admin', 'jerichoontalancpe@gmail.com', defaultPassword, 'admin']);
-    } catch (err) {
-      console.log('Admin user already exists or error:', err.message);
-    }
+    // Create tables using Supabase SQL
+    const { error: usersError } = await supabase.rpc('exec_sql', {
+      sql: `CREATE TABLE IF NOT EXISTS users (
+        id SERIAL PRIMARY KEY,
+        username TEXT UNIQUE NOT NULL,
+        email TEXT UNIQUE,
+        password TEXT NOT NULL,
+        role TEXT DEFAULT 'admin',
+        created_at TIMESTAMP DEFAULT NOW()
+      )`
+    });
 
-    console.log('✓ Database initialized successfully');
+    const { error: projectsError } = await supabase.rpc('exec_sql', {
+      sql: `CREATE TABLE IF NOT EXISTS projects (
+        id SERIAL PRIMARY KEY,
+        title TEXT NOT NULL,
+        authors TEXT NOT NULL,
+        adviser TEXT,
+        year INTEGER NOT NULL,
+        abstract TEXT,
+        keywords TEXT,
+        department TEXT NOT NULL,
+        project_type TEXT NOT NULL,
+        status TEXT DEFAULT 'completed',
+        pdf_filename TEXT,
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
+      )`
+    });
+
+    const { error: achievementsError } = await supabase.rpc('exec_sql', {
+      sql: `CREATE TABLE IF NOT EXISTS achievements (
+        id SERIAL PRIMARY KEY,
+        title TEXT NOT NULL,
+        description TEXT,
+        image_filename TEXT,
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
+      )`
+    });
+
+    console.log('✓ Database tables ready');
   } catch (error) {
-    console.error('Database initialization error:', error);
-    // Don't throw error - let the app start anyway
-    console.log('Continuing without sample data...');
+    console.error('Database setup error:', error);
   }
 };
 
-module.exports = { db, initDatabase };
+module.exports = { supabase, initDatabase };
