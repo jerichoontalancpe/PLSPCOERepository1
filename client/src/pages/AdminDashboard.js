@@ -130,7 +130,21 @@ const AdminDashboard = () => {
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this project?')) {
       try {
-        await axios.delete(`/api/projects/${id}`);
+        const apiUrl = process.env.NODE_ENV === 'production' 
+          ? 'https://plspcoerepository1.onrender.com' 
+          : 'http://localhost:5000';
+        
+        const response = await fetch(`${apiUrl}/api/projects/${id}`, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
         await fetchProjects();
         await fetchStats();
         window.dispatchEvent(new CustomEvent('projectsUpdated'));
@@ -187,7 +201,21 @@ const AdminDashboard = () => {
   const handleDeleteAchievement = async (id) => {
     if (window.confirm('Are you sure you want to delete this achievement?')) {
       try {
-        await axios.delete(`/api/achievements/${id}`);
+        const apiUrl = process.env.NODE_ENV === 'production' 
+          ? 'https://plspcoerepository1.onrender.com' 
+          : 'http://localhost:5000';
+        
+        const response = await fetch(`${apiUrl}/api/achievements/${id}`, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
         await fetchAchievements();
         alert('Achievement deleted successfully!');
       } catch (error) {
