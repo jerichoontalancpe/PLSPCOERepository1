@@ -27,8 +27,20 @@ const Repository = () => {
   const currentConfig = typeConfig[type] || typeConfig['all'];
 
   useEffect(() => {
+    // Get URL parameters for filtering
+    const urlDepartment = searchParams.get('department');
+    const urlType = searchParams.get('type');
+    
+    if (urlDepartment || urlType) {
+      setFilters(prev => ({
+        ...prev,
+        department: urlDepartment || '',
+        project_type: urlType || ''
+      }));
+    }
+    
     fetchProjects();
-  }, [filters, type]);
+  }, [filters, type, searchParams]);
 
   const fetchProjects = async () => {
     try {

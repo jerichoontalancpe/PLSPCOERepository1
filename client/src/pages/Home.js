@@ -48,28 +48,28 @@ const Home = () => {
       title: 'MOR Library (IE)',
       description: 'Browse Methods of Research topics for Industrial Engineering',
       icon: <BookOpen size={24} />,
-      link: '/repository/mor-ie',
+      link: '/repository/all?department=Industrial Engineering&type=Research',
       color: '#1e3a8a'
     },
     {
       title: 'MOR Library (CPE)',
       description: 'Browse Methods of Research topics for Computer Engineering',
       icon: <Cpu size={24} />,
-      link: '/repository/mor-cpe',
+      link: '/repository/all?department=Computer Engineering&type=Research',
       color: '#1e3a8a'
     },
     {
       title: 'CPE Design Projects',
       description: 'Explore Computer Engineering design projects and innovations',
       icon: <Wrench size={24} />,
-      link: '/repository/design-cpe',
+      link: '/repository/all?department=Computer Engineering&type=Capstone',
       color: '#f97316'
     },
     {
       title: 'IE Capstone Projects',
       description: 'Discover Industrial Engineering capstone projects',
       icon: <GraduationCap size={24} />,
-      link: '/repository/capstone-ie',
+      link: '/repository/all?department=Industrial Engineering&type=Capstone',
       color: '#f97316'
     }
   ];

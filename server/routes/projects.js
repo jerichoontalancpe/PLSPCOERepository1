@@ -182,29 +182,18 @@ router.put('/:id', upload.single('pdf'), async (req, res) => {
 
 // Delete project
 router.delete('/:id', async (req, res) => {
-  console.log('DELETE request received for project ID:', req.params.id);
-  
-  // Set CORS headers explicitly
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Methods', 'DELETE');
-  res.header('Access-Control-Allow-Headers', 'Content-Type');
-  
   try {
     const { error } = await supabase
       .from('projects')
       .delete()
-      .eq('id', req.params.id);
+      .eq('id', parseInt(req.params.id));
     
-    if (error) {
-      console.error('Supabase delete error:', error);
-      return res.status(500).json({ error: 'Database error', details: error.message });
-    }
+    if (error) throw error;
     
-    console.log('Project deleted successfully from Supabase');
-    res.status(200).json({ message: 'Project deleted successfully' });
+    res.status(200).json({ success: true, message: 'Project deleted successfully' });
   } catch (err) {
     console.error('Delete error:', err);
-    res.status(500).json({ error: 'Failed to delete project', details: err.message });
+    res.status(500).json({ success: false, error: 'Failed to delete project' });
   }
 });
 
