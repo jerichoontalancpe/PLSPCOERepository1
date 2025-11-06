@@ -126,12 +126,6 @@ const AdminDashboard = () => {
         await axios.delete(`/api/projects/${id}`);
         await fetchProjects();
         await fetchStats();
-        
-        window.dispatchEvent(new CustomEvent('projectsUpdated'));
-      try {
-        await axios.delete(`/api/projects/${id}`);
-        await fetchProjects();
-        await fetchStats();
         window.dispatchEvent(new CustomEvent('projectsUpdated'));
         alert('Project deleted successfully!');
       } catch (error) {
@@ -185,9 +179,6 @@ const AdminDashboard = () => {
 
   const handleDeleteAchievement = async (id) => {
     if (window.confirm('Are you sure you want to delete this achievement?')) {
-      try {
-        await axios.delete(`/api/achievements/${id}`);
-        await fetchAchievements();
       try {
         await axios.delete(`/api/achievements/${id}`);
         await fetchAchievements();
