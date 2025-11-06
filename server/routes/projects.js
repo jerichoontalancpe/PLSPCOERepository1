@@ -101,4 +101,20 @@ router.get('/:id', async (req, res) => {
   }
 });
 
+// Delete project
+router.delete('/:id', async (req, res) => {
+  try {
+    const { error } = await supabase
+      .from('projects')
+      .delete()
+      .eq('id', req.params.id);
+    
+    if (error) throw error;
+    res.json({ message: 'Project deleted successfully' });
+  } catch (err) {
+    console.error('Delete error:', err);
+    res.status(500).json({ error: 'Failed to delete project' });
+  }
+});
+
 module.exports = router;
