@@ -381,7 +381,6 @@ const AdminDashboard = () => {
             <Award size={18} />
             Achievements
           </button>
-          </button>
         </div>
 
         {/* Content based on active tab */}
