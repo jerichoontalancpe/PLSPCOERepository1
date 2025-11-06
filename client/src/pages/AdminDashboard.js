@@ -17,6 +17,11 @@ const AdminDashboard = () => {
   const [showModal, setShowModal] = useState(false);
   const [editingProject, setEditingProject] = useState(null);
   const [editingAchievement, setEditingAchievement] = useState(null);
+  const [missionVision, setMissionVision] = useState({
+    mission: '[Mission statement to be added by administrator]',
+    vision: '[Vision statement to be added by administrator]'
+  });
+  const [editingMissionVision, setEditingMissionVision] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const [formData, setFormData] = useState({
@@ -42,6 +47,12 @@ const AdminDashboard = () => {
     fetchProjects();
     fetchAchievements();
     fetchStats();
+    
+    // Load mission & vision from localStorage
+    const saved = localStorage.getItem('missionVision');
+    if (saved) {
+      setMissionVision(JSON.parse(saved));
+    }
   }, []);
 
   const fetchProjects = async () => {
@@ -285,14 +296,18 @@ const AdminDashboard = () => {
               if (activeTab === 'projects') {
                 resetForm();
                 setEditingProject(null);
-              } else {
+              } else if (activeTab === 'achievements') {
                 resetAchievementForm();
                 setEditingAchievement(null);
               }
               setShowModal(true);
             }}
             className="btn btn-primary"
-            style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+            style={{ 
+              display: activeTab === 'mission-vision' ? 'none' : 'flex', 
+              alignItems: 'center', 
+              gap: '0.5rem' 
+            }}
           >
             <Plus size={20} />
             Add {activeTab === 'projects' ? 'Project' : 'Achievement'}
@@ -375,10 +390,89 @@ const AdminDashboard = () => {
             <Award size={18} />
             Achievements
           </button>
+          <button
+            onClick={() => setActiveTab('mission-vision')}
+            style={{
+              padding: '1rem 2rem',
+              background: activeTab === 'mission-vision' ? '#1e3a8a' : 'transparent',
+              color: activeTab === 'mission-vision' ? 'white' : '#64748b',
+              border: 'none',
+              borderRadius: '8px 8px 0 0',
+              cursor: 'pointer',
+              fontWeight: '600',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem'
+            }}
+          >
+            <FileText size={18} />
+            Mission & Vision
+          </button>
         </div>
 
         {/* Content based on active tab */}
         {activeTab === 'projects' ? (
+          <div style={{ 
+            background: 'white', 
+            borderRadius: '12px', 
+            overflow: 'hidden',
+            boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
+          }}>
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr style={{ background: '#f8fafc' }}>
+                    <th style={{ padding: '1rem', textAlign: 'left', color: '#1e3a8a', fontWeight: '600' }}>Title</th>
+                    <th style={{ padding: '1rem', textAlign: 'left', color: '#1e3a8a', fontWeight: '600' }}>Authors</th>
+                    <th style={{ padding: '1rem', textAlign: 'left', color: '#1e3a8a', fontWeight: '600' }}>Department</th>
+                    <th style={{ padding: '1rem', textAlign: 'left', color: '#1e3a8a', fontWeight: '600' }}>Type</th>
+                    <th style={{ padding: '1rem', textAlign: 'left', color: '#1e3a8a', fontWeight: '600' }}>Year</th>
+                    <th style={{ padding: '1rem', textAlign: 'left', color: '#1e3a8a', fontWeight: '600' }}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {projects.map((project) => (
+                    <tr key={project.id} style={{ borderBottom: '1px solid #e2e8f0' }}>
+                      <td style={{ padding: '1rem' }}>
+                        <div style={{ fontWeight: '500', color: '#1e3a8a', marginBottom: '0.25rem' }}>
+                          {project.title}
+                        </div>
+                        <div style={{ fontSize: '0.875rem', color: '#64748b' }}>
+                          {project.abstract ? project.abstract.substring(0, 100) + '...' : 'No abstract'}
+                        </div>
+                      </td>
+                      <td style={{ padding: '1rem', color: '#64748b' }}>{project.authors}</td>
+                      <td style={{ padding: '1rem' }}>
+                        <span style={{
+                          background: '#dbeafe',
+                          color: '#1e40af',
+                          padding: '0.25rem 0.75rem',
+                          borderRadius: '9999px',
+                          fontSize: '0.875rem',
+                          fontWeight: '500'
+                        }}>
+                          {project.department}
+                        </span>
+                      </td>
+                      <td style={{ padding: '1rem', color: '#64748b' }}>{project.project_type}</td>
+                      <td style={{ padding: '1rem', color: '#64748b' }}>{project.year}</td>
+                      <td style={{ padding: '1rem' }}>
+                        <div style={{ display: 'flex', gap: '0.5rem' }}>
+                          <button onClick={() => handleEdit(project)} style={{ background: 'none', border: 'none', color: '#1e3a8a', cursor: 'pointer', padding: '0.5rem' }}>
+                            <Edit size={16} />
+                          </button>
+                          <button onClick={() => handleDelete(project.id)} style={{ background: 'none', border: 'none', color: '#dc2626', cursor: 'pointer', padding: '0.5rem' }}>
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        ) : activeTab === 'achievements' ? (
           <div style={{ 
             background: 'white', 
             borderRadius: '12px', 
