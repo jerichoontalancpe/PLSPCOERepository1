@@ -141,24 +141,13 @@ const AdminDashboard = () => {
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this project?')) {
       try {
-        // Simple workaround - remove from local state immediately
-        setProjects(prevProjects => prevProjects.filter(p => p.id !== id));
-        
-        // Try to delete from backend in background
-        const apiUrl = 'https://plspcoerepository1.onrender.com';
-        fetch(`${apiUrl}/api/projects/${id}`, {
-          method: 'DELETE',
-          mode: 'no-cors'
-        }).catch(err => console.log('Background delete:', err));
-        
-        // Update stats
+        await axios.delete(`/api/projects/${id}`);
+        await fetchProjects(); // Reload from database
         await fetchStats();
         window.dispatchEvent(new CustomEvent('projectsUpdated'));
         alert('Project deleted successfully!');
       } catch (error) {
         console.error('Error deleting project:', error);
-        // Reload projects to get current state
-        await fetchProjects();
         alert('Error deleting project. Please try again.');
       }
     }
@@ -209,21 +198,11 @@ const AdminDashboard = () => {
   const handleDeleteAchievement = async (id) => {
     if (window.confirm('Are you sure you want to delete this achievement?')) {
       try {
-        // Simple workaround - remove from local state immediately
-        setAchievements(prevAchievements => prevAchievements.filter(a => a.id !== id));
-        
-        // Try to delete from backend in background
-        const apiUrl = 'https://plspcoerepository1.onrender.com';
-        fetch(`${apiUrl}/api/achievements/${id}`, {
-          method: 'DELETE',
-          mode: 'no-cors'
-        }).catch(err => console.log('Background delete:', err));
-        
+        await axios.delete(`/api/achievements/${id}`);
+        await fetchAchievements(); // Reload from database
         alert('Achievement deleted successfully!');
       } catch (error) {
         console.error('Error deleting achievement:', error);
-        // Reload achievements to get current state
-        await fetchAchievements();
         alert('Error deleting achievement. Please try again.');
       }
     }
@@ -304,7 +283,7 @@ const AdminDashboard = () => {
             }}
             className="btn btn-primary"
             style={{ 
-              display: activeTab === 'mission-vision' ? 'none' : 'flex', 
+              display: 'flex', 
               alignItems: 'center', 
               gap: '0.5rem' 
             }}
@@ -390,23 +369,6 @@ const AdminDashboard = () => {
             <Award size={18} />
             Achievements
           </button>
-          <button
-            onClick={() => setActiveTab('mission-vision')}
-            style={{
-              padding: '1rem 2rem',
-              background: activeTab === 'mission-vision' ? '#1e3a8a' : 'transparent',
-              color: activeTab === 'mission-vision' ? 'white' : '#64748b',
-              border: 'none',
-              borderRadius: '8px 8px 0 0',
-              cursor: 'pointer',
-              fontWeight: '600',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem'
-            }}
-          >
-            <FileText size={18} />
-            Mission & Vision
           </button>
         </div>
 
@@ -485,8 +447,147 @@ const AdminDashboard = () => {
               background: '#f8fafc'
             }}>
               <h2 style={{ fontSize: '1.25rem', fontWeight: '600', color: '#1e3a8a' }}>
-                All Projects ({projects.length})
+                Achievements & Content Management
               </h2>
+            </div>
+            
+            {/* Mission & Vision Editor */}
+            <div style={{ padding: '2rem', borderBottom: '1px solid #e2e8f0' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                <h3 style={{ fontSize: '1.2rem', fontWeight: '600', color: '#1e3a8a' }}>Mission & Vision</h3>
+                <button 
+                  onClick={() => setEditingMissionVision(!editingMissionVision)}
+                  style={{ 
+                    background: '#1e3a8a', 
+                    color: 'white', 
+                    border: 'none', 
+                    padding: '0.5rem 1rem', 
+                    borderRadius: '6px', 
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem'
+                  }}
+                >
+                  <Edit size={16} />
+                  {editingMissionVision ? 'Cancel' : 'Edit'}
+                </button>
+              </div>
+              
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
+                <div>
+                  <h4 style={{ fontSize: '1rem', fontWeight: '600', color: '#1e3a8a', marginBottom: '0.5rem' }}>Mission</h4>
+                  {editingMissionVision ? (
+                    <textarea
+                      value={missionVision.mission}
+                      onChange={(e) => setMissionVision({...missionVision, mission: e.target.value})}
+                      style={{
+                        width: '100%',
+                        minHeight: '100px',
+                        padding: '0.75rem',
+                        border: '2px solid #e2e8f0',
+                        borderRadius: '8px',
+                        fontSize: '0.9rem',
+                        resize: 'vertical'
+                      }}
+                      placeholder="Enter mission statement..."
+                    />
+                  ) : (
+                    <div style={{
+                      padding: '0.75rem',
+                      background: '#f8fafc',
+                      borderRadius: '8px',
+                      border: '1px solid #e2e8f0',
+                      fontSize: '0.9rem',
+                      lineHeight: '1.5',
+                      color: '#374151',
+                      minHeight: '100px'
+                    }}>
+                      {missionVision.mission}
+                    </div>
+                  )}
+                </div>
+                
+                <div>
+                  <h4 style={{ fontSize: '1rem', fontWeight: '600', color: '#1e3a8a', marginBottom: '0.5rem' }}>Vision</h4>
+                  {editingMissionVision ? (
+                    <textarea
+                      value={missionVision.vision}
+                      onChange={(e) => setMissionVision({...missionVision, vision: e.target.value})}
+                      style={{
+                        width: '100%',
+                        minHeight: '100px',
+                        padding: '0.75rem',
+                        border: '2px solid #e2e8f0',
+                        borderRadius: '8px',
+                        fontSize: '0.9rem',
+                        resize: 'vertical'
+                      }}
+                      placeholder="Enter vision statement..."
+                    />
+                  ) : (
+                    <div style={{
+                      padding: '0.75rem',
+                      background: '#f8fafc',
+                      borderRadius: '8px',
+                      border: '1px solid #e2e8f0',
+                      fontSize: '0.9rem',
+                      lineHeight: '1.5',
+                      color: '#374151',
+                      minHeight: '100px'
+                    }}>
+                      {missionVision.vision}
+                    </div>
+                  )}
+                </div>
+              </div>
+              
+              {editingMissionVision && (
+                <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
+                  <button
+                    onClick={() => {
+                      localStorage.setItem('missionVision', JSON.stringify(missionVision));
+                      setEditingMissionVision(false);
+                      alert('Mission & Vision updated successfully!');
+                    }}
+                    style={{
+                      background: '#16a34a',
+                      color: 'white',
+                      border: 'none',
+                      padding: '0.5rem 1rem',
+                      borderRadius: '6px',
+                      cursor: 'pointer',
+                      fontWeight: '600'
+                    }}
+                  >
+                    Save Changes
+                  </button>
+                  <button
+                    onClick={() => setEditingMissionVision(false)}
+                    style={{
+                      background: '#6b7280',
+                      color: 'white',
+                      border: 'none',
+                      padding: '0.5rem 1rem',
+                      borderRadius: '6px',
+                      cursor: 'pointer',
+                      fontWeight: '600'
+                    }}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              )}
+            </div>
+            
+            <div style={{ 
+              padding: '1.5rem', 
+              borderBottom: '1px solid #e2e8f0',
+              background: '#f8fafc'
+            }}>
+              <h3 style={{ fontSize: '1.1rem', fontWeight: '600', color: '#1e3a8a' }}>
+                All Achievements ({achievements.length})
+              </h3>
             </div>
             
             <div style={{ overflowX: 'auto' }}>

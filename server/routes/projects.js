@@ -64,11 +64,19 @@ router.get('/stats/overview', async (req, res) => {
       return total + (p.authors ? p.authors.split(',').length : 0);
     }, 0);
     
+    // Separate by project type
+    const thesisCount = projects.filter(p => p.project_type === 'Thesis').length;
+    const capstoneCount = projects.filter(p => p.project_type === 'Capstone').length;
+    const researchCount = projects.filter(p => p.project_type === 'Research').length;
+    
     res.json({
       totalProjects,
       departments,
       years,
-      contributors
+      contributors,
+      thesisCount,
+      capstoneCount,
+      researchCount
     });
   } catch (err) {
     console.error('Stats error:', err);
@@ -76,7 +84,10 @@ router.get('/stats/overview', async (req, res) => {
       totalProjects: 0,
       departments: 0,
       years: 0,
-      contributors: 0
+      contributors: 0,
+      thesisCount: 0,
+      capstoneCount: 0,
+      researchCount: 0
     });
   }
 });
