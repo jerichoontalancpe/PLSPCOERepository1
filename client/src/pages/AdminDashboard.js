@@ -48,15 +48,6 @@ const AdminDashboard = () => {
       setLoading(false);
     }
   };
-        { id: 2, title: 'Innovation Excellence', description: 'Innovative solutions in Industrial Engineering' }
-      ];
-      setAchievements(sampleAchievements);
-      localStorage.setItem('achievements', JSON.stringify(sampleAchievements));
-    }
-
-    const saved = localStorage.getItem('missionVision');
-    if (saved) setMissionVision(JSON.parse(saved));
-  };
 
   const handleDelete = async (id) => {
     if (window.confirm('Delete this project?')) {
