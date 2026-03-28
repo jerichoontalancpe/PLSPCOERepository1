@@ -2,7 +2,7 @@ const express = require('express');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
-const { supabase } = require('../supabase');
+const { supabase } = require('../database');
 
 const router = express.Router();
 
@@ -32,16 +32,42 @@ const upload = multer({
   }
 });
 
-// Get all projects
+// Get projects by filters
 router.get('/', async (req, res) => {
   try {
-    const { data, error } = await supabase
-      .from('projects')
-      .select('*')
-      .order('year', { ascending: false });
+    const { department, type, search } = req.query;
     
-    if (error) throw error;
-    res.json(data || []);
+    let query = supabase.from('projects').select('*');
+    
+    if (department) {
+      query = query.eq('department', department);
+    }
+    
+    if (type) {
+      query = query.eq('project_type', type);
+    }
+    
+    const { data, error } = await query.order('year', { ascending: false });
+    
+    if (error) {
+      console.error('Database error:', error);
+      return res.json([]);
+    }
+    
+    let projects = data || [];
+    
+    // Apply search filter if provided
+    if (search) {
+      const searchLower = search.toLowerCase();
+      projects = projects.filter(project => 
+        project.title?.toLowerCase().includes(searchLower) ||
+        project.authors?.toLowerCase().includes(searchLower) ||
+        project.keywords?.toLowerCase().includes(searchLower) ||
+        project.abstract?.toLowerCase().includes(searchLower)
+      );
+    }
+    
+    res.json(projects);
   } catch (err) {
     console.error('Database error:', err);
     res.json([]);

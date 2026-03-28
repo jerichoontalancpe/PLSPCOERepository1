@@ -1,67 +1,100 @@
-const { supabase } = require('./supabase');
+const { initDatabase } = require('./database');
 
 async function addSampleData() {
-  console.log('Adding sample data...');
-  
   try {
-    // Delete existing data first
-    await supabase.from('projects').delete().neq('id', 0);
-    await supabase.from('achievements').delete().neq('id', 0);
+    await initDatabase();
     
-    // Add correct sample projects
-    const { data: projects, error: projectError } = await supabase
-      .from('projects')
-      .insert([
-        {
-          title: 'Smart Campus Management System',
-          authors: 'John Doe, Jane Smith',
-          adviser: 'Dr. Maria Santos',
-          year: 2024,
-          abstract: 'A comprehensive system for managing campus resources and student information.',
-          keywords: 'campus management, smart system, IoT',
-          department: 'Computer Engineering',
-          project_type: 'Thesis',
-          status: 'completed'
-        },
-        {
-          title: 'Industrial Process Optimization',
-          authors: 'Alice Johnson, Bob Wilson',
-          adviser: 'Prof. Carlos Rodriguez',
-          year: 2023,
-          abstract: 'An innovative approach to optimizing industrial manufacturing processes.',
-          keywords: 'optimization, manufacturing, efficiency',
-          department: 'Industrial Engineering',
-          project_type: 'Capstone',
-          status: 'completed'
-        }
-      ]);
-
-    if (projectError) {
-      console.error('Project insert error:', projectError);
-    } else {
-      console.log('Sample projects added successfully');
+    // Import supabase after initialization
+    const { supabase } = require('./database');
+    
+    console.log('Adding sample projects...');
+    
+    const sampleProjects = [
+      {
+        title: 'Smart Campus Management System',
+        authors: 'John Doe, Jane Smith',
+        adviser: 'Dr. Maria Santos',
+        year: 2024,
+        abstract: 'A comprehensive IoT-based campus management system that integrates various campus services including attendance tracking, facility management, and resource optimization.',
+        keywords: 'IoT, campus management, smart systems, automation',
+        department: 'Computer Engineering',
+        project_type: 'Capstone',
+        status: 'completed'
+      },
+      {
+        title: 'Manufacturing Process Optimization Using Lean Six Sigma',
+        authors: 'Alice Johnson, Bob Wilson',
+        adviser: 'Prof. Carlos Rodriguez',
+        year: 2024,
+        abstract: 'Implementation of Lean Six Sigma methodologies to optimize manufacturing processes and reduce waste in local manufacturing companies.',
+        keywords: 'lean manufacturing, six sigma, process optimization, waste reduction',
+        department: 'Industrial Engineering',
+        project_type: 'Capstone',
+        status: 'completed'
+      },
+      {
+        title: 'Machine Learning Approaches in Quality Control',
+        authors: 'Sarah Chen, Michael Brown',
+        adviser: 'Dr. Lisa Garcia',
+        year: 2023,
+        abstract: 'Research on applying machine learning algorithms for automated quality control in manufacturing processes.',
+        keywords: 'machine learning, quality control, automation, manufacturing',
+        department: 'Computer Engineering',
+        project_type: 'Research',
+        status: 'completed'
+      },
+      {
+        title: 'Supply Chain Optimization for Small Enterprises',
+        authors: 'David Lee, Emma Davis',
+        adviser: 'Prof. Antonio Reyes',
+        year: 2023,
+        abstract: 'Development of supply chain optimization strategies specifically designed for small and medium enterprises.',
+        keywords: 'supply chain, optimization, SME, logistics',
+        department: 'Industrial Engineering',
+        project_type: 'Research',
+        status: 'completed'
+      }
+    ];
+    
+    for (const project of sampleProjects) {
+      const { data, error } = await supabase
+        .from('projects')
+        .insert([project]);
+      
+      if (error) {
+        console.error('Error inserting project:', error);
+      } else {
+        console.log(`✅ Added project: ${project.title}`);
+      }
     }
-
-    // Add sample achievements
-    const { data: achievements, error: achievementError } = await supabase
-      .from('achievements')
-      .insert([
-        {
-          title: 'Best Thesis Award 2024',
-          description: 'Awarded for outstanding research in Computer Engineering'
-        },
-        {
-          title: 'Innovation Excellence',
-          description: 'Recognition for innovative solutions in Industrial Engineering'
-        }
-      ]);
-
-    if (achievementError) {
-      console.error('Achievement insert error:', achievementError);
-    } else {
-      console.log('Sample achievements added successfully');
+    
+    console.log('Adding sample achievements...');
+    
+    const sampleAchievements = [
+      {
+        title: 'Best Thesis Award 2024',
+        description: 'Outstanding research in Computer Engineering for Smart Campus Management System'
+      },
+      {
+        title: 'Innovation Excellence Award',
+        description: 'Recognition for innovative approach in Industrial Engineering process optimization'
+      }
+    ];
+    
+    for (const achievement of sampleAchievements) {
+      const { data, error } = await supabase
+        .from('achievements')
+        .insert([achievement]);
+      
+      if (error) {
+        console.error('Error inserting achievement:', error);
+      } else {
+        console.log(`✅ Added achievement: ${achievement.title}`);
+      }
     }
-
+    
+    console.log('✅ Sample data added successfully!');
+    
   } catch (error) {
     console.error('Error adding sample data:', error);
   }

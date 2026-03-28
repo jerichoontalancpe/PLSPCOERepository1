@@ -5,11 +5,8 @@ import axios from 'axios';
 
 const Home = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [stats, setStats] = useState({
-    total: 0,
-    byDepartment: [],
-    byYear: []
-  });
+  const [stats, setStats] = useState(null);
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -29,10 +26,111 @@ const Home = () => {
 
   const fetchStats = async () => {
     try {
-      const response = await axios.get('/api/projects/stats/overview');
-      setStats(response.data);
+      setLoading(true);
+      
+      // Try API first, then fallback to localStorage, then use default data
+      let projects = [];
+      
+      try {
+        const response = await axios.get('/api/projects');
+        projects = response.data || [];
+      } catch (apiError) {
+        const savedProjects = localStorage.getItem('projects');
+        if (savedProjects) {
+          projects = JSON.parse(savedProjects);
+        } else {
+          // Default sample data if nothing exists
+          projects = [
+            {
+              id: 1,
+              title: 'Smart Campus Management System',
+              authors: 'John Doe, Jane Smith',
+              adviser: 'Dr. Maria Santos',
+              year: 2024,
+              abstract: 'A comprehensive IoT-based campus management system.',
+              keywords: 'IoT, campus management, smart systems',
+              department: 'Computer Engineering',
+              project_type: 'Capstone',
+              status: 'completed'
+            },
+            {
+              id: 2,
+              title: 'Manufacturing Process Optimization',
+              authors: 'Alice Johnson, Bob Wilson',
+              adviser: 'Prof. Carlos Rodriguez',
+              year: 2024,
+              abstract: 'Implementation of Lean Six Sigma methodologies.',
+              keywords: 'lean manufacturing, six sigma',
+              department: 'Industrial Engineering',
+              project_type: 'Capstone',
+              status: 'completed'
+            },
+            {
+              id: 3,
+              title: 'Machine Learning in Quality Control',
+              authors: 'Sarah Chen, Michael Brown',
+              adviser: 'Dr. Lisa Garcia',
+              year: 2023,
+              abstract: 'Research on applying machine learning algorithms.',
+              keywords: 'machine learning, quality control',
+              department: 'Computer Engineering',
+              project_type: 'Research',
+              status: 'completed'
+            },
+            {
+              id: 4,
+              title: 'Supply Chain Optimization',
+              authors: 'David Lee, Emma Davis',
+              adviser: 'Prof. Antonio Reyes',
+              year: 2023,
+              abstract: 'Development of supply chain optimization strategies.',
+              keywords: 'supply chain, optimization',
+              department: 'Industrial Engineering',
+              project_type: 'Research',
+              status: 'completed'
+            }
+          ];
+          // Save default data to localStorage
+          localStorage.setItem('projects', JSON.stringify(projects));
+        }
+      }
+      
+      const total = projects.length;
+      const contributors = projects.reduce((sum, p) => {
+        return sum + (p.authors ? p.authors.split(',').length : 0);
+      }, 0);
+      
+      const uniqueYears = [...new Set(projects.map(p => p.year))];
+      const years = uniqueYears.length;
+      
+      const departmentCounts = projects.reduce((acc, p) => {
+        acc[p.department] = (acc[p.department] || 0) + 1;
+        return acc;
+      }, {});
+      
+      const byDepartment = Object.entries(departmentCounts).map(([dept, count]) => ({
+        department: dept,
+        count
+      }));
+
+      setStats({
+        total,
+        contributors,
+        years,
+        byDepartment,
+        byYear: uniqueYears
+      });
     } catch (error) {
       console.error('Error fetching stats:', error);
+      setStats({
+        total: 0,
+        contributors: 0,
+        years: 0,
+        byDepartment: [],
+        byYear: []
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -234,7 +332,7 @@ const Home = () => {
       <section style={{ padding: '4rem 0', background: '#f8fafc' }}>
         <div className="container">
           <h2 className="section-title">Repository Overview</h2>
-          {stats ? (
+          {!loading && stats ? (
             <div className="stats-grid">
               <div className="stat-card">
                 <div className="stat-number">{stats?.total || 0}</div>
@@ -245,11 +343,11 @@ const Home = () => {
                 <div className="stat-label">Departments</div>
               </div>
               <div className="stat-card">
-                <div className="stat-number">{stats?.byYear?.length || 0}</div>
+                <div className="stat-number">{stats?.years || 0}</div>
                 <div className="stat-label">Years of Research</div>
               </div>
               <div className="stat-card">
-                <div className="stat-number">{Math.floor((stats?.total || 0) * 2.5)}</div>
+                <div className="stat-number">{stats?.contributors || 0}</div>
                 <div className="stat-label">Student Contributors</div>
               </div>
             </div>

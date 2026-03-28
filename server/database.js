@@ -1,54 +1,43 @@
-const { supabase } = require('./supabase');
+const { createClient } = require('@supabase/supabase-js');
+const { supabase: sqliteSupabase, initDatabase: initSQLite } = require('./database-sqlite');
 
+let supabase;
+let usingSupabase = false;
+
+// Try to initialize Supabase, fallback to SQLite
 const initDatabase = async () => {
   try {
-    console.log('✓ Supabase connected successfully');
+    // Try Supabase first
+    const supabaseUrl = process.env.SUPABASE_URL;
+    const supabaseKey = process.env.SUPABASE_ANON_KEY;
     
-    // Create tables using Supabase SQL
-    const { error: usersError } = await supabase.rpc('exec_sql', {
-      sql: `CREATE TABLE IF NOT EXISTS users (
-        id SERIAL PRIMARY KEY,
-        username TEXT UNIQUE NOT NULL,
-        email TEXT UNIQUE,
-        password TEXT NOT NULL,
-        role TEXT DEFAULT 'admin',
-        created_at TIMESTAMP DEFAULT NOW()
-      )`
-    });
-
-    const { error: projectsError } = await supabase.rpc('exec_sql', {
-      sql: `CREATE TABLE IF NOT EXISTS projects (
-        id SERIAL PRIMARY KEY,
-        title TEXT NOT NULL,
-        authors TEXT NOT NULL,
-        adviser TEXT,
-        year INTEGER NOT NULL,
-        abstract TEXT,
-        keywords TEXT,
-        department TEXT NOT NULL,
-        project_type TEXT NOT NULL,
-        status TEXT DEFAULT 'completed',
-        pdf_filename TEXT,
-        created_at TIMESTAMP DEFAULT NOW(),
-        updated_at TIMESTAMP DEFAULT NOW()
-      )`
-    });
-
-    const { error: achievementsError } = await supabase.rpc('exec_sql', {
-      sql: `CREATE TABLE IF NOT EXISTS achievements (
-        id SERIAL PRIMARY KEY,
-        title TEXT NOT NULL,
-        description TEXT,
-        image_filename TEXT,
-        created_at TIMESTAMP DEFAULT NOW(),
-        updated_at TIMESTAMP DEFAULT NOW()
-      )`
-    });
-
-    console.log('✓ Database tables ready');
+    if (supabaseUrl && supabaseKey) {
+      const supabaseClient = createClient(supabaseUrl, supabaseKey);
+      
+      // Test connection
+      const { data, error } = await supabaseClient
+        .from('users')
+        .select('count', { count: 'exact', head: true });
+      
+      if (!error) {
+        supabase = supabaseClient;
+        usingSupabase = true;
+        console.log('✅ Using Supabase database');
+        return;
+      }
+    }
+    
+    throw new Error('Supabase not available');
   } catch (error) {
-    console.error('Database setup error:', error);
+    console.log('⚠️  Supabase not available, using SQLite fallback');
+    supabase = sqliteSupabase;
+    usingSupabase = false;
+    await initSQLite();
   }
 };
 
-module.exports = { supabase, initDatabase };
+module.exports = { 
+  get supabase() { return supabase; },
+  initDatabase,
+  get usingSupabase() { return usingSupabase; }
+};

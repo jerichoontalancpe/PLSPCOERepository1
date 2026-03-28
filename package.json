@@ -4,15 +4,13 @@
   "description": "PLSP College of Engineering Repository Management System",
   "main": "server/index.js",
   "scripts": {
+    "start": "cd server && npm install && npm start",
+    "build": "cd server && npm install",
     "dev": "concurrently \"npm run server\" \"npm run client\"",
     "server": "cd server && npm run dev",
-    "client": "cd client && npm start",
-    "build": "cd client && npm run build",
-    "start": "cd server && npm start",
-    "install-all": "npm install && cd server && npm install && cd ../client && npm install",
-    "deploy": "npm run build && npm run start"
+    "client": "cd client && npm start"
   },
-  "devDependencies": {
-    "concurrently": "^8.2.2"
+  "engines": {
+    "node": ">=16.0.0"
   }
 }

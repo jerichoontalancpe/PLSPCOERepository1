@@ -22,9 +22,7 @@ const Header = () => {
           />
           <div>
             <div className="header-title">COE Repository System</div>
-            <div style={{ fontSize: '0.9rem', opacity: 0.8 }}>
-              Pamantasan ng Lungsod ng San Pablo
-            </div>
+            <div className="header-subtitle">Pamantasan ng Lungsod ng San Pablo</div>
           </div>
           <img 
             src="/plsp-logo.jpg" 
@@ -37,6 +35,7 @@ const Header = () => {
           <ul className="nav-links">
             <li><Link to="/">Home</Link></li>
             <li><Link to="/about">About</Link></li>
+            <li><Link to="/repository/all">Repository</Link></li>
             {user ? (
               <>
                 <li><Link to="/admin/dashboard">Dashboard</Link></li>

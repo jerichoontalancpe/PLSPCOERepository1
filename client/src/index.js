@@ -3,8 +3,8 @@ import ReactDOM from 'react-dom/client';
 import axios from 'axios';
 import App from './App';
 
-// Set axios base URL
-axios.defaults.baseURL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+// Use localStorage only - simple and works immediately
+axios.defaults.baseURL = 'http://localhost:5000';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(

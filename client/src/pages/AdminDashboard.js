@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Edit, Trash2, FileText, Users, Calendar, Award } from 'lucide-react';
+import axios from 'axios';
 
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('projects');
@@ -8,6 +9,7 @@ const AdminDashboard = () => {
   const [showModal, setShowModal] = useState(false);
   const [editingProject, setEditingProject] = useState(null);
   const [editingAchievement, setEditingAchievement] = useState(null);
+  const [loading, setLoading] = useState(false);
   const [missionVision, setMissionVision] = useState({
     mission: 'To provide quality education in engineering and technology.',
     vision: 'To be a leading institution in engineering education and research.'
@@ -26,25 +28,26 @@ const AdminDashboard = () => {
     loadData();
   }, []);
 
-  const loadData = () => {
-    const savedProjects = localStorage.getItem('projects');
-    if (savedProjects) {
-      setProjects(JSON.parse(savedProjects));
-    } else {
-      const sampleProjects = [
-        { id: 1, title: 'Smart Campus System', authors: 'John Doe, Jane Smith', adviser: 'Dr. Santos', year: 2024, abstract: 'Campus management system', keywords: 'IoT, management', department: 'Computer Engineering', project_type: 'Thesis', status: 'completed' },
-        { id: 2, title: 'Process Optimization', authors: 'Alice Johnson, Bob Wilson', adviser: 'Prof. Rodriguez', year: 2023, abstract: 'Industrial optimization', keywords: 'optimization, manufacturing', department: 'Industrial Engineering', project_type: 'Capstone', status: 'completed' }
-      ];
-      setProjects(sampleProjects);
-      localStorage.setItem('projects', JSON.stringify(sampleProjects));
+  const loadData = async () => {
+    try {
+      setLoading(true);
+      
+      // Load projects from API
+      const projectsResponse = await axios.get('/api/projects');
+      setProjects(projectsResponse.data || []);
+      
+      // Load achievements from API
+      const achievementsResponse = await axios.get('/api/achievements');
+      setAchievements(achievementsResponse.data || []);
+      
+    } catch (error) {
+      console.error('Error loading data:', error);
+      setProjects([]);
+      setAchievements([]);
+    } finally {
+      setLoading(false);
     }
-
-    const savedAchievements = localStorage.getItem('achievements');
-    if (savedAchievements) {
-      setAchievements(JSON.parse(savedAchievements));
-    } else {
-      const sampleAchievements = [
-        { id: 1, title: 'Best Thesis Award 2024', description: 'Outstanding research in Computer Engineering' },
+  };
         { id: 2, title: 'Innovation Excellence', description: 'Innovative solutions in Industrial Engineering' }
       ];
       setAchievements(sampleAchievements);
@@ -55,58 +58,106 @@ const AdminDashboard = () => {
     if (saved) setMissionVision(JSON.parse(saved));
   };
 
-  const handleDelete = (id) => {
+  const handleDelete = async (id) => {
     if (window.confirm('Delete this project?')) {
-      const updated = projects.filter(p => p.id !== id);
-      setProjects(updated);
-      localStorage.setItem('projects', JSON.stringify(updated));
-      alert('Project deleted!');
+      try {
+        setLoading(true);
+        await axios.delete(`/api/projects/${id}`);
+        
+        // Refresh the projects list
+        await loadData();
+        
+        // Dispatch custom event to notify other components
+        window.dispatchEvent(new CustomEvent('projectsUpdated'));
+        
+        alert('Project deleted!');
+      } catch (error) {
+        console.error('Error deleting project:', error);
+        alert('Error deleting project. Please try again.');
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
-  const handleDeleteAchievement = (id) => {
+  const handleDeleteAchievement = async (id) => {
     if (window.confirm('Delete this achievement?')) {
-      const updated = achievements.filter(a => a.id !== id);
-      setAchievements(updated);
-      localStorage.setItem('achievements', JSON.stringify(updated));
-      alert('Achievement deleted!');
+      try {
+        setLoading(true);
+        await axios.delete(`/api/achievements/${id}`);
+        
+        // Refresh the achievements list
+        await loadData();
+        
+        alert('Achievement deleted!');
+      } catch (error) {
+        console.error('Error deleting achievement:', error);
+        alert('Error deleting achievement. Please try again.');
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (editingProject) {
-      const updated = projects.map(p => p.id === editingProject.id ? { ...formData, id: editingProject.id, year: parseInt(formData.year) } : p);
-      setProjects(updated);
-      localStorage.setItem('projects', JSON.stringify(updated));
-    } else {
-      const newProject = { ...formData, id: Date.now(), year: parseInt(formData.year) };
-      const updated = [...projects, newProject];
-      setProjects(updated);
-      localStorage.setItem('projects', JSON.stringify(updated));
+    try {
+      setLoading(true);
+      
+      const projectData = {
+        ...formData,
+        year: parseInt(formData.year)
+      };
+      
+      if (editingProject) {
+        await axios.put(`/api/projects/${editingProject.id}`, projectData);
+      } else {
+        await axios.post('/api/projects', projectData);
+      }
+      
+      // Refresh the projects list
+      await loadData();
+      
+      // Dispatch custom event to notify other components
+      window.dispatchEvent(new CustomEvent('projectsUpdated'));
+      
+      setShowModal(false);
+      setEditingProject(null);
+      setFormData({ title: '', authors: '', adviser: '', year: '', abstract: '', keywords: '', department: 'Computer Engineering', project_type: 'Thesis', status: 'completed' });
+      alert('Project saved!');
+    } catch (error) {
+      console.error('Error saving project:', error);
+      alert('Error saving project. Please try again.');
+    } finally {
+      setLoading(false);
     }
-    setShowModal(false);
-    setEditingProject(null);
-    setFormData({ title: '', authors: '', adviser: '', year: '', abstract: '', keywords: '', department: 'Computer Engineering', project_type: 'Thesis', status: 'completed' });
-    alert('Project saved!');
   };
 
-  const handleAchievementSubmit = (e) => {
+  const handleAchievementSubmit = async (e) => {
     e.preventDefault();
-    if (editingAchievement) {
-      const updated = achievements.map(a => a.id === editingAchievement.id ? { ...achievementFormData, id: editingAchievement.id } : a);
-      setAchievements(updated);
-      localStorage.setItem('achievements', JSON.stringify(updated));
-    } else {
-      const newAchievement = { ...achievementFormData, id: Date.now() };
-      const updated = [...achievements, newAchievement];
-      setAchievements(updated);
-      localStorage.setItem('achievements', JSON.stringify(updated));
+    try {
+      setLoading(true);
+      
+      if (editingAchievement) {
+        await axios.put(`/api/achievements/${editingAchievement.id}`, achievementFormData);
+      } else {
+        await axios.post('/api/achievements', achievementFormData);
+      }
+      
+      // Refresh the achievements list
+      await loadData();
+      
+      setShowModal(false);
+      setEditingAchievement(null);
+      setAchievementFormData({ title: '', description: '' });
+      alert('Achievement saved!');
+    } catch (error) {
+      console.error('Error saving achievement:', error);
+      alert('Error saving achievement. Please try again.');
+    } finally {
+      setLoading(false);
     }
-    setShowModal(false);
-    setEditingAchievement(null);
-    setAchievementFormData({ title: '', description: '' });
-    alert('Achievement saved!');
+  };
   };
 
   const stats = {

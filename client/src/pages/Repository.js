@@ -45,18 +45,107 @@ const Repository = () => {
   const fetchProjects = async () => {
     try {
       setLoading(true);
-      const params = new URLSearchParams();
       
-      if (filters.search) params.append('search', filters.search);
-      if (currentConfig.department) params.append('department', currentConfig.department);
-      if (currentConfig.project_type) params.append('project_type', currentConfig.project_type);
-      if (filters.year) params.append('year', filters.year);
-      if (filters.status) params.append('status', filters.status);
-
-      const response = await axios.get(`/api/projects?${params}`);
-      setProjects(response.data);
+      // Try API first, then fallback to localStorage, then use default data
+      let projects = [];
+      
+      try {
+        const params = new URLSearchParams();
+        if (filters.search) params.append('search', filters.search);
+        
+        const urlDepartment = searchParams.get('department');
+        const urlType = searchParams.get('type');
+        
+        if (urlDepartment) params.append('department', urlDepartment);
+        if (urlType) params.append('type', urlType);
+        
+        const response = await axios.get(`/api/projects?${params}`);
+        projects = response.data || [];
+      } catch (apiError) {
+        const savedProjects = localStorage.getItem('projects');
+        if (savedProjects) {
+          projects = JSON.parse(savedProjects);
+        } else {
+          // Default sample data
+          projects = [
+            {
+              id: 1,
+              title: 'Smart Campus Management System',
+              authors: 'John Doe, Jane Smith',
+              adviser: 'Dr. Maria Santos',
+              year: 2024,
+              abstract: 'A comprehensive IoT-based campus management system that integrates various campus services including attendance tracking, facility management, and resource optimization.',
+              keywords: 'IoT, campus management, smart systems, automation',
+              department: 'Computer Engineering',
+              project_type: 'Capstone',
+              status: 'completed'
+            },
+            {
+              id: 2,
+              title: 'Manufacturing Process Optimization Using Lean Six Sigma',
+              authors: 'Alice Johnson, Bob Wilson',
+              adviser: 'Prof. Carlos Rodriguez',
+              year: 2024,
+              abstract: 'Implementation of Lean Six Sigma methodologies to optimize manufacturing processes and reduce waste in local manufacturing companies.',
+              keywords: 'lean manufacturing, six sigma, process optimization, waste reduction',
+              department: 'Industrial Engineering',
+              project_type: 'Capstone',
+              status: 'completed'
+            },
+            {
+              id: 3,
+              title: 'Machine Learning Approaches in Quality Control',
+              authors: 'Sarah Chen, Michael Brown',
+              adviser: 'Dr. Lisa Garcia',
+              year: 2023,
+              abstract: 'Research on applying machine learning algorithms for automated quality control in manufacturing processes.',
+              keywords: 'machine learning, quality control, automation, manufacturing',
+              department: 'Computer Engineering',
+              project_type: 'Research',
+              status: 'completed'
+            },
+            {
+              id: 4,
+              title: 'Supply Chain Optimization for Small Enterprises',
+              authors: 'David Lee, Emma Davis',
+              adviser: 'Prof. Antonio Reyes',
+              year: 2023,
+              abstract: 'Development of supply chain optimization strategies specifically designed for small and medium enterprises.',
+              keywords: 'supply chain, optimization, SME, logistics',
+              department: 'Industrial Engineering',
+              project_type: 'Research',
+              status: 'completed'
+            }
+          ];
+          localStorage.setItem('projects', JSON.stringify(projects));
+        }
+        
+        // Apply filters manually
+        const urlDepartment = searchParams.get('department');
+        const urlType = searchParams.get('type');
+        
+        if (urlDepartment) {
+          projects = projects.filter(p => p.department === urlDepartment);
+        }
+        
+        if (urlType) {
+          projects = projects.filter(p => p.project_type === urlType);
+        }
+        
+        if (filters.search) {
+          const searchLower = filters.search.toLowerCase();
+          projects = projects.filter(p => 
+            p.title?.toLowerCase().includes(searchLower) ||
+            p.authors?.toLowerCase().includes(searchLower) ||
+            p.keywords?.toLowerCase().includes(searchLower)
+          );
+        }
+      }
+      
+      setProjects(projects);
     } catch (error) {
       console.error('Error fetching projects:', error);
+      setProjects([]);
     } finally {
       setLoading(false);
     }
@@ -92,7 +181,7 @@ const Repository = () => {
           <h1 className="section-title">{currentConfig.title}</h1>
           
           {/* Search Bar */}
-          <form onSubmit={handleSearch} className="search-container">
+          <form onSubmit={handleSearch} className="search-container repository-search">
             <div style={{ position: 'relative' }}>
               <Search className="search-icon" size={20} />
               <input
@@ -115,8 +204,8 @@ const Repository = () => {
                   onChange={(e) => handleFilterChange('department', e.target.value)}
                 >
                   <option value="">All Departments</option>
-                  <option value="IE">Industrial Engineering</option>
-                  <option value="CPE">Computer Engineering</option>
+                  <option value="Industrial Engineering">Industrial Engineering</option>
+                  <option value="Computer Engineering">Computer Engineering</option>
                 </select>
 
                 <select
