@@ -202,7 +202,7 @@ const About = () => {
                 }}>
                   {achievement.image_filename && (
                     <img 
-                      src={`/uploads/${achievement.image_filename}`} 
+                      src={achievement.image_filename} 
                       alt={achievement.title}
                       style={{ width: '100%', height: '200px', objectFit: 'cover' }}
                     />

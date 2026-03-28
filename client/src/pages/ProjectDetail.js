@@ -271,16 +271,11 @@ const ProjectDetail = () => {
                   Document
                 </h3>
                 <a 
-                  href={`${process.env.REACT_APP_API_URL || 'https://plspcoerepository1.onrender.com'}/uploads/${project.pdf_filename}`}
+                  href={project.pdf_filename}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="btn btn-primary"
-                  style={{ 
-                    display: 'inline-flex', 
-                    alignItems: 'center', 
-                    gap: '0.5rem',
-                    textDecoration: 'none'
-                  }}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none' }}
                 >
                   <Download size={20} />
                   Download PDF

@@ -1,131 +1,88 @@
 const express = require('express');
 const multer = require('multer');
-const path = require('path');
-const fs = require('fs');
 const { supabase } = require('../database');
 
 const router = express.Router();
 
-// Ensure uploads directory exists
-const uploadsDir = path.join(__dirname, '../uploads');
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
-}
-
-// Configure multer for image uploads
 const upload = multer({
-  storage: multer.diskStorage({
-    destination: (req, file, cb) => {
-      cb(null, uploadsDir);
-    },
-    filename: (req, file, cb) => {
-      const uniqueName = Date.now() + '-' + Math.round(Math.random() * 1E9) + path.extname(file.originalname);
-      cb(null, uniqueName);
-    }
-  }),
+  storage: multer.memoryStorage(),
   fileFilter: (req, file, cb) => {
-    if (file.mimetype.startsWith('image/')) {
-      cb(null, true);
-    } else {
-      cb(new Error('Only image files allowed'), false);
-    }
+    if (file.mimetype.startsWith('image/')) cb(null, true);
+    else cb(new Error('Only image files allowed'), false);
   }
 });
 
-// Get all achievements
 router.get('/', async (req, res) => {
   try {
-    const { data, error } = await supabase
-      .from('achievements')
-      .select('*')
-      .order('created_at', { ascending: false });
-    
+    const { data, error } = await supabase.from('achievements').select('*').order('created_at', { ascending: false });
     if (error) throw error;
     res.json(data || []);
   } catch (err) {
-    console.error('Database error:', err);
     res.json([]);
   }
 });
 
-// Create achievement
 router.post('/', upload.single('image'), async (req, res) => {
   const { title, description } = req.body;
-  const image_filename = req.file ? req.file.filename : null;
+  let image_url = null;
 
   try {
-    const { data, error } = await supabase
-      .from('achievements')
-      .insert([{
-        title,
-        description: description || '',
-        image_filename
-      }])
-      .select();
-    
+    if (req.file) {
+      const ext = req.file.mimetype.split('/')[1];
+      const filename = `${Date.now()}-${Math.round(Math.random() * 1e9)}.${ext}`;
+      const { error: uploadError } = await supabase.storage
+        .from('images')
+        .upload(filename, req.file.buffer, { contentType: req.file.mimetype });
+      if (!uploadError) {
+        const { data: urlData } = supabase.storage.from('images').getPublicUrl(filename);
+        image_url = urlData.publicUrl;
+      }
+    }
+
+    const { data, error } = await supabase.from('achievements').insert([{
+      title, description: description || '', image_filename: image_url
+    }]).select();
+
     if (error) throw error;
-    
-    res.json({ 
-      id: data[0].id, 
-      message: 'Achievement created successfully' 
-    });
+    res.json({ id: data[0].id, message: 'Achievement created successfully' });
   } catch (err) {
     console.error('Database error:', err);
-    res.json({ 
-      id: Date.now(), 
-      message: 'Achievement created successfully' 
-    });
+    res.status(500).json({ error: err.message });
   }
 });
 
-// Update achievement
 router.put('/:id', upload.single('image'), async (req, res) => {
   const { title, description } = req.body;
-  const image_filename = req.file ? req.file.filename : undefined;
 
   try {
-    let updateData = {
-      title,
-      description: description || ''
-    };
+    let updateData = { title, description: description || '' };
 
-    if (image_filename) {
-      updateData.image_filename = image_filename;
+    if (req.file) {
+      const ext = req.file.mimetype.split('/')[1];
+      const filename = `${Date.now()}-${Math.round(Math.random() * 1e9)}.${ext}`;
+      const { error: uploadError } = await supabase.storage
+        .from('images')
+        .upload(filename, req.file.buffer, { contentType: req.file.mimetype });
+      if (!uploadError) {
+        const { data: urlData } = supabase.storage.from('images').getPublicUrl(filename);
+        updateData.image_filename = urlData.publicUrl;
+      }
     }
 
-    const { error } = await supabase
-      .from('achievements')
-      .update(updateData)
-      .eq('id', req.params.id);
-    
+    const { error } = await supabase.from('achievements').update(updateData).eq('id', req.params.id);
     if (error) throw error;
     res.json({ message: 'Achievement updated successfully' });
   } catch (err) {
-    console.error('Update error:', err);
-    res.json({ message: 'Achievement updated successfully' });
+    res.status(500).json({ error: err.message });
   }
 });
 
-// Delete achievement
 router.delete('/:id', async (req, res) => {
   try {
-    console.log('Deleting achievement with ID:', req.params.id);
-    
-    const { data, error } = await supabase
-      .from('achievements')
-      .delete()
-      .eq('id', req.params.id)
-      .select();
-    
-    if (error) {
-      console.error('Supabase error:', error);
-      throw error;
-    }
-    
-    console.log('Successfully deleted achievement from database:', data);
+    const { error } = await supabase.from('achievements').delete().eq('id', req.params.id);
+    if (error) throw error;
     res.json({ success: true, message: 'Achievement deleted successfully' });
   } catch (err) {
-    console.error('Delete error:', err);
     res.status(500).json({ success: false, error: err.message });
   }
 });

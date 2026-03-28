@@ -1,34 +1,16 @@
 const express = require('express');
 const multer = require('multer');
 const path = require('path');
-const fs = require('fs');
 const { supabase } = require('../database');
 
 const router = express.Router();
 
-// Ensure uploads directory exists
-const uploadsDir = path.join(__dirname, '../uploads');
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
-}
-
-// Configure multer for file uploads
+// Use memory storage — files go to Supabase Storage, not disk
 const upload = multer({
-  storage: multer.diskStorage({
-    destination: (req, file, cb) => {
-      cb(null, uploadsDir);
-    },
-    filename: (req, file, cb) => {
-      const uniqueName = Date.now() + '-' + Math.round(Math.random() * 1E9) + path.extname(file.originalname);
-      cb(null, uniqueName);
-    }
-  }),
+  storage: multer.memoryStorage(),
   fileFilter: (req, file, cb) => {
-    if (file.mimetype === 'application/pdf') {
-      cb(null, true);
-    } else {
-      cb(new Error('Only PDF files allowed'), false);
-    }
+    if (file.mimetype === 'application/pdf') cb(null, true);
+    else cb(new Error('Only PDF files allowed'), false);
   }
 });
 
@@ -38,35 +20,22 @@ router.get('/', async (req, res) => {
     const { department, type, search } = req.query;
     
     let query = supabase.from('projects').select('*');
-    
-    if (department) {
-      query = query.eq('department', department);
-    }
-    
-    if (type) {
-      query = query.eq('project_type', type);
-    }
+    if (department) query = query.eq('department', department);
+    if (type) query = query.eq('project_type', type);
     
     const { data, error } = await query.order('year', { ascending: false });
-    
-    if (error) {
-      console.error('Database error:', error);
-      return res.json([]);
-    }
+    if (error) throw error;
     
     let projects = data || [];
-    
-    // Apply search filter if provided
     if (search) {
-      const searchLower = search.toLowerCase();
-      projects = projects.filter(project => 
-        project.title?.toLowerCase().includes(searchLower) ||
-        project.authors?.toLowerCase().includes(searchLower) ||
-        project.keywords?.toLowerCase().includes(searchLower) ||
-        project.abstract?.toLowerCase().includes(searchLower)
+      const s = search.toLowerCase();
+      projects = projects.filter(p =>
+        p.title?.toLowerCase().includes(s) ||
+        p.authors?.toLowerCase().includes(s) ||
+        p.keywords?.toLowerCase().includes(s) ||
+        p.abstract?.toLowerCase().includes(s)
       );
     }
-    
     res.json(projects);
   } catch (err) {
     console.error('Database error:', err);
@@ -74,96 +43,10 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Get stats overview
-router.get('/stats/overview', async (req, res) => {
-  try {
-    const { data: projects, error } = await supabase
-      .from('projects')
-      .select('*');
-    
-    if (error) throw error;
-    
-    const totalProjects = projects.length;
-    const departments = [...new Set(projects.map(p => p.department))].length;
-    const years = [...new Set(projects.map(p => p.year))].length;
-    const contributors = projects.reduce((total, p) => {
-      return total + (p.authors ? p.authors.split(',').length : 0);
-    }, 0);
-    
-    // Separate by project type
-    const thesisCount = projects.filter(p => p.project_type === 'Thesis').length;
-    const capstoneCount = projects.filter(p => p.project_type === 'Capstone').length;
-    const researchCount = projects.filter(p => p.project_type === 'Research').length;
-    
-    res.json({
-      totalProjects,
-      departments,
-      years,
-      contributors,
-      thesisCount,
-      capstoneCount,
-      researchCount
-    });
-  } catch (err) {
-    console.error('Stats error:', err);
-    res.json({
-      totalProjects: 0,
-      departments: 0,
-      years: 0,
-      contributors: 0,
-      thesisCount: 0,
-      capstoneCount: 0,
-      researchCount: 0
-    });
-  }
-});
-
-// Create project
-router.post('/', upload.single('pdf'), async (req, res) => {
-  const { title, authors, adviser, year, abstract, keywords, department, project_type, status } = req.body;
-  const pdf_filename = req.file ? req.file.filename : null;
-
-  try {
-    const { data, error } = await supabase
-      .from('projects')
-      .insert([{
-        title,
-        authors,
-        adviser: adviser || '',
-        year: parseInt(year),
-        abstract: abstract || '',
-        keywords: keywords || '',
-        department,
-        project_type,
-        status: status || 'completed',
-        pdf_filename
-      }])
-      .select();
-    
-    if (error) throw error;
-    
-    res.json({ 
-      id: data[0].id, 
-      message: 'Project created successfully' 
-    });
-  } catch (err) {
-    console.error('Database error:', err);
-    res.json({ 
-      id: Date.now(), 
-      message: 'Project created successfully' 
-    });
-  }
-});
-
 // Get single project
 router.get('/:id', async (req, res) => {
   try {
-    const { data, error } = await supabase
-      .from('projects')
-      .select('*')
-      .eq('id', req.params.id)
-      .single();
-    
+    const { data, error } = await supabase.from('projects').select('*').eq('id', req.params.id).single();
     if (error) throw error;
     res.json(data);
   } catch (err) {
@@ -171,61 +54,75 @@ router.get('/:id', async (req, res) => {
   }
 });
 
+// Create project
+router.post('/', upload.single('pdf'), async (req, res) => {
+  const { title, authors, adviser, year, abstract, keywords, department, project_type, status } = req.body;
+  let pdf_url = null;
+
+  try {
+    if (req.file) {
+      const filename = `${Date.now()}-${Math.round(Math.random() * 1e9)}.pdf`;
+      const { error: uploadError } = await supabase.storage
+        .from('pdfs')
+        .upload(filename, req.file.buffer, { contentType: 'application/pdf' });
+      if (!uploadError) {
+        const { data: urlData } = supabase.storage.from('pdfs').getPublicUrl(filename);
+        pdf_url = urlData.publicUrl;
+      }
+    }
+
+    const { data, error } = await supabase.from('projects').insert([{
+      title, authors, adviser: adviser || '', year: parseInt(year),
+      abstract: abstract || '', keywords: keywords || '',
+      department, project_type, status: status || 'completed', pdf_filename: pdf_url
+    }]).select();
+
+    if (error) throw error;
+    res.json({ id: data[0].id, message: 'Project created successfully' });
+  } catch (err) {
+    console.error('Database error:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Update project
 router.put('/:id', upload.single('pdf'), async (req, res) => {
   const { title, authors, adviser, year, abstract, keywords, department, project_type, status } = req.body;
-  const pdf_filename = req.file ? req.file.filename : undefined;
 
   try {
     let updateData = {
-      title,
-      authors,
-      adviser: adviser || '',
-      year: parseInt(year),
-      abstract: abstract || '',
-      keywords: keywords || '',
-      department,
-      project_type,
-      status: status || 'completed'
+      title, authors, adviser: adviser || '', year: parseInt(year),
+      abstract: abstract || '', keywords: keywords || '',
+      department, project_type, status: status || 'completed'
     };
 
-    if (pdf_filename) {
-      updateData.pdf_filename = pdf_filename;
+    if (req.file) {
+      const filename = `${Date.now()}-${Math.round(Math.random() * 1e9)}.pdf`;
+      const { error: uploadError } = await supabase.storage
+        .from('pdfs')
+        .upload(filename, req.file.buffer, { contentType: 'application/pdf' });
+      if (!uploadError) {
+        const { data: urlData } = supabase.storage.from('pdfs').getPublicUrl(filename);
+        updateData.pdf_filename = urlData.publicUrl;
+      }
     }
 
-    const { error } = await supabase
-      .from('projects')
-      .update(updateData)
-      .eq('id', req.params.id);
-    
+    const { error } = await supabase.from('projects').update(updateData).eq('id', req.params.id);
     if (error) throw error;
     res.json({ message: 'Project updated successfully' });
   } catch (err) {
     console.error('Update error:', err);
-    res.json({ message: 'Project updated successfully' });
+    res.status(500).json({ error: err.message });
   }
 });
 
 // Delete project
 router.delete('/:id', async (req, res) => {
   try {
-    console.log('Deleting project with ID:', req.params.id);
-    
-    const { data, error } = await supabase
-      .from('projects')
-      .delete()
-      .eq('id', req.params.id)
-      .select();
-    
-    if (error) {
-      console.error('Supabase error:', error);
-      throw error;
-    }
-    
-    console.log('Successfully deleted from database:', data);
+    const { error } = await supabase.from('projects').delete().eq('id', req.params.id);
+    if (error) throw error;
     res.json({ success: true, message: 'Project deleted successfully' });
   } catch (err) {
-    console.error('Delete error:', err);
     res.status(500).json({ success: false, error: err.message });
   }
 });
