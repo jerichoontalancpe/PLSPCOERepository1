@@ -215,8 +215,9 @@ const Repository = () => {
                 >
                   <option value="">All Project Types</option>
                   <option value="MOR">Methods of Research</option>
-                  <option value="Capstone">Capstone Project</option>
+                  <option value="Capstone">Capstone</option>
                   <option value="Design Project">Design Project</option>
+                  <option value="Research">Research</option>
                 </select>
               </>
             )}

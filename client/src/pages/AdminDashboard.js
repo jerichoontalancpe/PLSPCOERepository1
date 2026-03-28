@@ -17,7 +17,7 @@ const AdminDashboard = () => {
   const [editingMissionVision, setEditingMissionVision] = useState(false);
 
   const [formData, setFormData] = useState({
-    title: '', authors: '', adviser: '', year: '', abstract: '', keywords: '', department: 'Computer Engineering', project_type: 'Thesis', status: 'completed'
+    title: '', authors: '', adviser: '', year: '', abstract: '', keywords: '', department: 'Computer Engineering', project_type: 'MOR', status: 'completed'
   });
 
   const [achievementFormData, setAchievementFormData] = useState({
@@ -114,7 +114,7 @@ const AdminDashboard = () => {
       
       setShowModal(false);
       setEditingProject(null);
-      setFormData({ title: '', authors: '', adviser: '', year: '', abstract: '', keywords: '', department: 'Computer Engineering', project_type: 'Thesis', status: 'completed' });
+      setFormData({ title: '', authors: '', adviser: '', year: '', abstract: '', keywords: '', department: 'Computer Engineering', project_type: 'MOR', status: 'completed' });
       alert('Project saved!');
     } catch (error) {
       console.error('Error saving project:', error);
@@ -348,8 +348,9 @@ const AdminDashboard = () => {
                     <div>
                       <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Type *</label>
                       <select value={formData.project_type} onChange={(e) => setFormData({...formData, project_type: e.target.value})} required style={{ width: '100%', padding: '0.75rem', border: '1px solid #d1d5db', borderRadius: '6px' }}>
-                        <option value="Thesis">Thesis</option>
+                        <option value="MOR">Methods of Research (MOR)</option>
                         <option value="Capstone">Capstone</option>
+                        <option value="Design Project">Design Project</option>
                         <option value="Research">Research</option>
                       </select>
                     </div>
