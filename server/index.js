@@ -30,11 +30,12 @@ initDatabase().then(() => {
   const authRoutes = require('./routes/auth');
   const projectRoutes = require('./routes/projects');
   const achievementRoutes = require('./routes/achievements');
+  const settingsRoutes = require('./routes/settings');
   
-  // Routes
   app.use('/api/auth', authRoutes);
   app.use('/api/projects', projectRoutes);
   app.use('/api/achievements', achievementRoutes);
+  app.use('/api/settings', settingsRoutes);
   
   app.listen(PORT, () => {
     console.log(`✅ Server running on port ${PORT}`);

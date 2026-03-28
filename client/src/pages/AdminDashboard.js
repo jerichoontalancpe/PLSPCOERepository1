@@ -19,10 +19,12 @@ const AdminDashboard = () => {
   const [formData, setFormData] = useState({
     title: '', authors: '', adviser: '', year: '', abstract: '', keywords: '', department: 'Computer Engineering', project_type: 'MOR', status: 'completed'
   });
+  const [pdfFile, setPdfFile] = useState(null);
 
   const [achievementFormData, setAchievementFormData] = useState({
     title: '', description: ''
   });
+  const [imageFile, setImageFile] = useState(null);
 
   useEffect(() => {
     loadData();
@@ -31,15 +33,20 @@ const AdminDashboard = () => {
   const loadData = async () => {
     try {
       setLoading(true);
-      
-      // Load projects from API
-      const projectsResponse = await axios.get('/api/projects');
-      setProjects(projectsResponse.data || []);
-      
-      // Load achievements from API
-      const achievementsResponse = await axios.get('/api/achievements');
-      setAchievements(achievementsResponse.data || []);
-      
+      const [projectsRes, achievementsRes, settingsRes] = await Promise.all([
+        axios.get('/api/projects'),
+        axios.get('/api/achievements'),
+        axios.get('/api/settings')
+      ]);
+      setProjects(projectsRes.data || []);
+      setAchievements(achievementsRes.data || []);
+      const s = settingsRes.data || {};
+      if (s.mission || s.vision) {
+        setMissionVision({
+          mission: s.mission || missionVision.mission,
+          vision: s.vision || missionVision.vision
+        });
+      }
     } catch (error) {
       console.error('Error loading data:', error);
       setProjects([]);
@@ -95,25 +102,21 @@ const AdminDashboard = () => {
     try {
       setLoading(true);
       
-      const projectData = {
-        ...formData,
-        year: parseInt(formData.year)
-      };
-      
+      const data = new FormData();
+      Object.entries({ ...formData, year: parseInt(formData.year) }).forEach(([k, v]) => data.append(k, v));
+      if (pdfFile) data.append('pdf', pdfFile);
+
       if (editingProject) {
-        await axios.put(`/api/projects/${editingProject.id}`, projectData);
+        await axios.put(`/api/projects/${editingProject.id}`, data);
       } else {
-        await axios.post('/api/projects', projectData);
+        await axios.post('/api/projects', data);
       }
       
-      // Refresh the projects list
       await loadData();
-      
-      // Dispatch custom event to notify other components
       window.dispatchEvent(new CustomEvent('projectsUpdated'));
-      
       setShowModal(false);
       setEditingProject(null);
+      setPdfFile(null);
       setFormData({ title: '', authors: '', adviser: '', year: '', abstract: '', keywords: '', department: 'Computer Engineering', project_type: 'MOR', status: 'completed' });
       alert('Project saved!');
     } catch (error) {
@@ -129,17 +132,21 @@ const AdminDashboard = () => {
     try {
       setLoading(true);
       
+      const data = new FormData();
+      data.append('title', achievementFormData.title);
+      data.append('description', achievementFormData.description);
+      if (imageFile) data.append('image', imageFile);
+
       if (editingAchievement) {
-        await axios.put(`/api/achievements/${editingAchievement.id}`, achievementFormData);
+        await axios.put(`/api/achievements/${editingAchievement.id}`, data);
       } else {
-        await axios.post('/api/achievements', achievementFormData);
+        await axios.post('/api/achievements', data);
       }
       
-      // Refresh the achievements list
       await loadData();
-      
       setShowModal(false);
       setEditingAchievement(null);
+      setImageFile(null);
       setAchievementFormData({ title: '', description: '' });
       alert('Achievement saved!');
     } catch (error) {
@@ -286,7 +293,14 @@ const AdminDashboard = () => {
               
               {editingMissionVision && (
                 <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
-                  <button onClick={() => { localStorage.setItem('missionVision', JSON.stringify(missionVision)); setEditingMissionVision(false); alert('Mission & Vision updated!'); }} style={{ background: '#16a34a', color: 'white', border: 'none', padding: '0.5rem 1rem', borderRadius: '6px', cursor: 'pointer', fontWeight: '600' }}>Save Changes</button>
+                  <button onClick={async () => {
+                    await Promise.all([
+                      axios.put('/api/settings/mission', { value: missionVision.mission }),
+                      axios.put('/api/settings/vision', { value: missionVision.vision })
+                    ]);
+                    setEditingMissionVision(false);
+                    alert('Mission & Vision updated!');
+                  }} style={{ background: '#16a34a', color: 'white', border: 'none', padding: '0.5rem 1rem', borderRadius: '6px', cursor: 'pointer', fontWeight: '600' }}>Save Changes</button>
                   <button onClick={() => setEditingMissionVision(false)} style={{ background: '#6b7280', color: 'white', border: 'none', padding: '0.5rem 1rem', borderRadius: '6px', cursor: 'pointer', fontWeight: '600' }}>Cancel</button>
                 </div>
               )}
@@ -373,6 +387,13 @@ const AdminDashboard = () => {
                     <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Keywords</label>
                     <input type="text" value={formData.keywords} onChange={(e) => setFormData({...formData, keywords: e.target.value})} style={{ width: '100%', padding: '0.75rem', border: '1px solid #d1d5db', borderRadius: '6px' }} />
                   </div>
+                  <div style={{ marginBottom: '1rem' }}>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Upload PDF</label>
+                    <input type="file" accept="application/pdf" onChange={(e) => setPdfFile(e.target.files[0])} style={{ width: '100%', padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '6px' }} />
+                    {editingProject?.pdf_filename && !pdfFile && (
+                      <div style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '0.25rem' }}>Current: {editingProject.pdf_filename}</div>
+                    )}
+                  </div>
                   <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
                     <button type="button" onClick={() => setShowModal(false)} style={{ padding: '0.75rem 1.5rem', border: '1px solid #d1d5db', borderRadius: '6px', background: 'white', cursor: 'pointer' }}>Cancel</button>
                     <button type="submit" style={{ padding: '0.75rem 1.5rem', background: '#1e3a8a', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>{editingProject ? 'Update Project' : 'Add Project'}</button>
@@ -387,6 +408,13 @@ const AdminDashboard = () => {
                   <div style={{ marginBottom: '1rem' }}>
                     <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Description</label>
                     <textarea value={achievementFormData.description} onChange={(e) => setAchievementFormData({...achievementFormData, description: e.target.value})} rows="4" style={{ width: '100%', padding: '0.75rem', border: '1px solid #d1d5db', borderRadius: '6px', resize: 'vertical' }} />
+                  </div>
+                  <div style={{ marginBottom: '1rem' }}>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Upload Image</label>
+                    <input type="file" accept="image/*" onChange={(e) => setImageFile(e.target.files[0])} style={{ width: '100%', padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '6px' }} />
+                    {editingAchievement?.image_filename && !imageFile && (
+                      <div style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '0.25rem' }}>Current: {editingAchievement.image_filename}</div>
+                    )}
                   </div>
                   <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
                     <button type="button" onClick={() => setShowModal(false)} style={{ padding: '0.75rem 1.5rem', border: '1px solid #d1d5db', borderRadius: '6px', background: 'white', cursor: 'pointer' }}>Cancel</button>

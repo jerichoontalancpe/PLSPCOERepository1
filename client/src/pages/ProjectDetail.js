@@ -138,14 +138,14 @@ const ProjectDetail = () => {
 
             {/* Department Badge */}
             <div style={{
-              background: project.department === 'IE' ? '#1e3a8a' : '#f97316',
+              background: project.department === 'Industrial Engineering' ? '#1e3a8a' : '#f97316',
               color: 'white',
               padding: '0.75rem 1.5rem',
               borderRadius: '8px',
               fontWeight: '600',
               fontSize: '1.1rem'
             }}>
-              {project.department === 'IE' ? 'Industrial Engineering' : 'Computer Engineering'}
+              {project.department}
             </div>
           </div>
 
@@ -271,7 +271,7 @@ const ProjectDetail = () => {
                   Document
                 </h3>
                 <a 
-                  href={`/uploads/${project.pdf_filename}`}
+                  href={`${process.env.REACT_APP_API_URL || 'https://plspcoerepository1.onrender.com'}/uploads/${project.pdf_filename}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="btn btn-primary"
@@ -307,9 +307,7 @@ const ProjectDetail = () => {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 <div>
                   <strong style={{ color: '#1e3a8a' }}>Department:</strong>
-                  <div style={{ marginTop: '0.25rem' }}>
-                    {project.department === 'IE' ? 'Industrial Engineering' : 'Computer Engineering'}
-                  </div>
+                  <div style={{ marginTop: '0.25rem' }}>{project.department}</div>
                 </div>
                 
                 <div>

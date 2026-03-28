@@ -5,17 +5,23 @@ import axios from 'axios';
 const About = () => {
   const [achievements, setAchievements] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [missionVision, setMissionVision] = useState({ mission: '', vision: '' });
 
   useEffect(() => {
-    fetchAchievements();
+    fetchData();
   }, []);
 
-  const fetchAchievements = async () => {
+  const fetchData = async () => {
     try {
-      const response = await axios.get('/api/achievements');
-      setAchievements(response.data);
+      const [achievementsRes, settingsRes] = await Promise.all([
+        axios.get('/api/achievements'),
+        axios.get('/api/settings')
+      ]);
+      setAchievements(achievementsRes.data);
+      const s = settingsRes.data || {};
+      setMissionVision({ mission: s.mission || '', vision: s.vision || '' });
     } catch (error) {
-      console.error('Error fetching achievements:', error);
+      console.error('Error fetching data:', error);
     } finally {
       setLoading(false);
     }
@@ -108,13 +114,13 @@ const About = () => {
             <div style={{ 
               lineHeight: '1.8', 
               color: '#64748b',
-              fontStyle: 'italic',
+              fontStyle: missionVision.mission ? 'normal' : 'italic',
               padding: '1rem',
               background: '#f8fafc',
               borderRadius: '8px',
               border: '2px dashed #cbd5e1'
             }}>
-              [Mission statement to be added by administrator]
+              {missionVision.mission || '[Mission statement to be added by administrator]'}
             </div>
           </div>
 
@@ -149,13 +155,13 @@ const About = () => {
             <div style={{ 
               lineHeight: '1.8', 
               color: '#64748b',
-              fontStyle: 'italic',
+              fontStyle: missionVision.vision ? 'normal' : 'italic',
               padding: '1rem',
               background: '#f8fafc',
               borderRadius: '8px',
               border: '2px dashed #cbd5e1'
             }}>
-              [Vision statement to be added by administrator]
+              {missionVision.vision || '[Vision statement to be added by administrator]'}
             </div>
           </div>
         </div>

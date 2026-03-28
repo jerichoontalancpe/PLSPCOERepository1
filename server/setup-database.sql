@@ -52,3 +52,10 @@ CREATE TABLE IF NOT EXISTS password_resets (
 INSERT INTO users (username, email, password, role) 
 VALUES ('admin', 'admin@plsp.edu.ph', '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin')
 ON CONFLICT (username) DO NOTHING;
+
+-- Create settings table
+CREATE TABLE IF NOT EXISTS settings (
+  key TEXT PRIMARY KEY,
+  value TEXT NOT NULL,
+  updated_at TIMESTAMP DEFAULT NOW()
+);
