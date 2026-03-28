@@ -149,7 +149,6 @@ const AdminDashboard = () => {
       setLoading(false);
     }
   };
-  };
 
   const stats = {
     totalProjects: projects.length,
