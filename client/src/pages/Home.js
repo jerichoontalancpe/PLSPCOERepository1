@@ -56,15 +56,27 @@ const Home = () => {
       <section className="hero" style={{ backgroundImage: 'url(/cover-photo.jpg)', backgroundSize: 'cover', backgroundPosition: 'center', position: 'relative' }}>
         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, rgba(30,58,138,0.85) 0%, rgba(30,64,175,0.85) 100%)', zIndex: 1 }} />
         <div className="hero-content" style={{ position: 'relative', zIndex: 2 }}>
-          <div className="hero-logos">
+          {/* Desktop: logo | title | logo */}
+          <div className="hero-logos hero-logos-desktop">
             <img src="/coe-logo.jpg" alt="College of Engineering" className="hero-logo" />
-            <div style={{ textAlign: 'center' }}>
+            <div className="hero-logos-text">
               <h1 style={{ margin: 0, fontSize: '3rem', fontWeight: '700', lineHeight: '1.1' }}>College of Engineering</h1>
               <h2 style={{ margin: '0.5rem 0 0 0', fontSize: '2rem', fontWeight: '600', opacity: 0.9, lineHeight: '1.1' }}>Repository System</h2>
             </div>
             <img src="/plsp-logo.jpg" alt="PLSP" className="hero-logo" />
           </div>
 
+          {/* Mobile: logos on top, title below */}
+          <div className="hero-logos-mobile">
+            <div className="hero-logos-row">
+              <img src="/coe-logo.jpg" alt="College of Engineering" className="hero-logo" />
+              <img src="/plsp-logo.jpg" alt="PLSP" className="hero-logo" />
+            </div>
+            <div className="hero-logos-text" style={{ marginTop: '1rem' }}>
+              <h1 style={{ margin: 0, fontWeight: '700', lineHeight: '1.1' }}>College of Engineering</h1>
+              <h2 style={{ margin: '0.5rem 0 0 0', fontWeight: '600', opacity: 0.9, lineHeight: '1.1' }}>Repository System</h2>
+            </div>
+          </div>
           {/* Departments */}
           <div className="hero-departments">
             {[

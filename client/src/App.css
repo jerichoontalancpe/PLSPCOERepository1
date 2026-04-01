@@ -182,12 +182,33 @@ body {
   margin-bottom: 2rem;
 }
 
+.hero-logos-desktop {
+  display: flex;
+}
+
+.hero-logos-mobile {
+  display: none;
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.hero-logos-row {
+  display: flex;
+  gap: 1.5rem;
+  justify-content: center;
+  align-items: center;
+}
+
 .hero-logo {
   width: 120px;
   height: 120px;
   border-radius: 50%;
   box-shadow: 0 4px 20px rgba(255,255,255,0.3);
   flex-shrink: 0;
+}
+
+.hero-logos-text {
+  text-align: center;
 }
 
 /* Hero departments row */
@@ -691,8 +712,9 @@ body {
   .hero h2 { font-size: 1.1rem; }
   .hero p { font-size: 1rem; }
 
-  .hero-logos { gap: 1rem; }
-  .hero-logo { width: 60px; height: 60px; }
+  .hero-logos-desktop { display: none; }
+  .hero-logos-mobile { display: block; }
+  .hero-logo { width: 70px; height: 70px; }
   .hero-departments { gap: 1.25rem; }
 
   .section-title { font-size: 1.5rem; margin-bottom: 1.75rem; }
