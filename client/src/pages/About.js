@@ -113,14 +113,14 @@ const About = () => {
             </div>
             <div style={{ 
               lineHeight: '1.8', 
-              color: '#64748b',
+              color: missionVision.mission ? '#64748b' : '#94a3b8',
               fontStyle: missionVision.mission ? 'normal' : 'italic',
               padding: '1rem',
               background: '#f8fafc',
               borderRadius: '8px',
-              border: '2px dashed #cbd5e1'
+              border: '1px solid #e2e8f0'
             }}>
-              {missionVision.mission || '[Mission statement to be added by administrator]'}
+              {missionVision.mission || 'Mission statement not yet added.'}
             </div>
           </div>
 
@@ -154,14 +154,14 @@ const About = () => {
             </div>
             <div style={{ 
               lineHeight: '1.8', 
-              color: '#64748b',
+              color: missionVision.vision ? '#64748b' : '#94a3b8',
               fontStyle: missionVision.vision ? 'normal' : 'italic',
               padding: '1rem',
               background: '#f8fafc',
               borderRadius: '8px',
-              border: '2px dashed #cbd5e1'
+              border: '1px solid #e2e8f0'
             }}>
-              {missionVision.vision || '[Vision statement to be added by administrator]'}
+              {missionVision.vision || 'Vision statement not yet added.'}
             </div>
           </div>
         </div>

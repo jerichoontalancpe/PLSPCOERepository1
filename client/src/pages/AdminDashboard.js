@@ -159,9 +159,9 @@ const AdminDashboard = () => {
 
   const stats = {
     totalProjects: projects.length,
-    thesisCount: projects.filter(p => p.project_type === 'Thesis').length,
+    morCount: projects.filter(p => p.project_type === 'MOR').length,
     capstoneCount: projects.filter(p => p.project_type === 'Capstone').length,
-    researchCount: projects.filter(p => p.project_type === 'Research').length,
+    designCount: projects.filter(p => p.project_type === 'Design Project').length,
     contributors: projects.reduce((total, p) => total + (p.authors ? p.authors.split(',').length : 0), 0),
     departments: [...new Set(projects.map(p => p.department))].length
   };
@@ -189,8 +189,8 @@ const AdminDashboard = () => {
           </div>
           <div style={{ background: 'linear-gradient(135deg, #059669 0%, #10b981 100%)', color: 'white', padding: '1.5rem', borderRadius: '12px', textAlign: 'center' }}>
             <FileText size={32} style={{ marginBottom: '0.5rem' }} />
-            <div style={{ fontSize: '2rem', fontWeight: 'bold' }}>{stats.thesisCount}</div>
-            <div style={{ opacity: 0.9 }}>Thesis Projects</div>
+            <div style={{ fontSize: '2rem', fontWeight: 'bold' }}>{stats.morCount}</div>
+            <div style={{ opacity: 0.9 }}>MOR Projects</div>
           </div>
           <div style={{ background: 'linear-gradient(135deg, #dc2626 0%, #ef4444 100%)', color: 'white', padding: '1.5rem', borderRadius: '12px', textAlign: 'center' }}>
             <FileText size={32} style={{ marginBottom: '0.5rem' }} />

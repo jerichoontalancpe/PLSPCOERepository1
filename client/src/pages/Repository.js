@@ -135,7 +135,20 @@ const Repository = () => {
 
         {/* Results */}
         {loading ? (
-          <div style={{ textAlign: 'center', padding: '3rem', color: '#64748b', fontSize: '1.2rem' }}>Loading projects...</div>
+          <div className="projects-grid">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="skeleton-card">
+                <div className="skeleton" style={{ height: '22px', width: '70%', marginBottom: '0.75rem' }} />
+                <div className="skeleton" style={{ height: '14px', width: '45%', marginBottom: '1rem' }} />
+                <div className="skeleton" style={{ height: '14px', width: '100%', marginBottom: '0.4rem' }} />
+                <div className="skeleton" style={{ height: '14px', width: '85%', marginBottom: '1rem' }} />
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <div className="skeleton" style={{ height: '24px', width: '70px', borderRadius: '20px' }} />
+                  <div className="skeleton" style={{ height: '24px', width: '70px', borderRadius: '20px' }} />
+                </div>
+              </div>
+            ))}
+          </div>
         ) : projects.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '3rem' }}>
             <FileText size={48} style={{ color: '#64748b', marginBottom: '1rem' }} />

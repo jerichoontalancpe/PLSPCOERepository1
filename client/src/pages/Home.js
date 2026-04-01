@@ -194,17 +194,11 @@ const Home = () => {
         }}></div>
         
         <div className="hero-content" style={{ position: 'relative', zIndex: 2 }}>
-          <div style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            justifyContent: 'center',
-            gap: '3rem',
-            marginBottom: '2rem'
-          }}>
+          <div className="hero-logos">
             <img 
               src="/coe-logo.jpg" 
               alt="College of Engineering" 
-              style={{ width: '120px', height: '120px', borderRadius: '50%', boxShadow: '0 4px 20px rgba(255,255,255,0.3)' }}
+              className="hero-logo"
             />
             <div style={{ textAlign: 'center' }}>
               <h1 style={{ margin: 0, fontSize: '3rem', fontWeight: '700', lineHeight: '1.1' }}>
@@ -217,7 +211,7 @@ const Home = () => {
             <img 
               src="/plsp-logo.jpg" 
               alt="PLSP" 
-              style={{ width: '120px', height: '120px', borderRadius: '50%', boxShadow: '0 4px 20px rgba(255,255,255,0.3)' }}
+              className="hero-logo"
             />
           </div>
           
@@ -301,7 +295,7 @@ const Home = () => {
           <h2 className="section-title">Quick Access</h2>
           <div style={{
             display: 'grid',
-            gridTemplateColumns: '1fr 1fr',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
             gap: '2rem',
             maxWidth: '800px',
             margin: '0 auto'
@@ -352,8 +346,13 @@ const Home = () => {
               </div>
             </div>
           ) : (
-            <div style={{ textAlign: 'center', padding: '2rem' }}>
-              <div style={{ color: '#64748b' }}>Loading statistics...</div>
+            <div className="stats-grid">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="stat-card">
+                  <div className="skeleton" style={{ height: '48px', width: '60px', margin: '0 auto 0.5rem' }} />
+                  <div className="skeleton" style={{ height: '14px', width: '80%', margin: '0 auto' }} />
+                </div>
+              ))}
             </div>
           )}
         </div>
