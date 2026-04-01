@@ -272,6 +272,9 @@ const AdminDashboard = () => {
                         <td style={{ padding: '1rem', color: '#64748b' }}>{project.year}</td>
                         <td style={{ padding: '1rem' }}>
                           <div style={{ display: 'flex', gap: '0.5rem' }}>
+                            <a href={`/project/${project.id}`} target="_blank" rel="noopener noreferrer" style={{ background: 'none', border: 'none', color: '#16a34a', cursor: 'pointer', padding: '0.5rem', display: 'flex', alignItems: 'center' }} title="View">
+                              <FileText size={16} />
+                            </a>
                             <button onClick={() => { setEditingProject(project); setFormData(project); setShowModal(true); }} style={{ background: 'none', border: 'none', color: '#1e3a8a', cursor: 'pointer', padding: '0.5rem' }}>
                               <Edit size={16} />
                             </button>

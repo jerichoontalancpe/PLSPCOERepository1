@@ -35,12 +35,12 @@ const AdminLogin = () => {
 
   return (
     <div style={{ 
-      padding: '4rem 0', 
-      minHeight: '80vh',
+      minHeight: 'calc(100vh - 72px)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      background: 'linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%)'
+      background: 'linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%)',
+      padding: '2rem'
     }}>
       <div style={{
         background: 'white',

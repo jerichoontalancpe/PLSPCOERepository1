@@ -5,9 +5,7 @@ const AuthContext = createContext();
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
+  if (!context) throw new Error('useAuth must be used within an AuthProvider');
   return context;
 };
 
@@ -17,34 +15,25 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     const token = localStorage.getItem('token');
-    if (token) {
+    const userData = localStorage.getItem('user');
+    if (token && userData) {
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      // Verify token is still valid
-      const userData = localStorage.getItem('user');
-      if (userData) {
-        setUser(JSON.parse(userData));
-      }
+      setUser(JSON.parse(userData));
     }
     setLoading(false);
   }, []);
 
   const login = async (username, password) => {
-    // Hardcoded credentials
-    if (username === 'admin' && password === 'PLSPCOEAdmin123') {
-      const user = { username: 'admin', role: 'admin' };
-      const token = 'mock-token-' + Date.now();
-      
+    try {
+      const response = await axios.post('/api/auth/login', { username, password });
+      const { token, user } = response.data;
       localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(user));
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       setUser(user);
-      
       return { success: true };
-    } else {
-      return { 
-        success: false, 
-        error: 'Invalid username or password' 
-      };
+    } catch (err) {
+      return { success: false, error: err.response?.data?.error || 'Invalid username or password' };
     }
   };
 
@@ -55,15 +44,8 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
   };
 
-  const value = {
-    user,
-    login,
-    logout,
-    loading
-  };
-
   return (
-    <AuthContext.Provider value={value}>
+    <AuthContext.Provider value={{ user, login, logout, loading }}>
       {!loading && children}
     </AuthContext.Provider>
   );

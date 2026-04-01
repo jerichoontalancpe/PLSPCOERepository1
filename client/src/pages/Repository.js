@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useSearchParams, Link } from 'react-router-dom';
-import { Search, FileText, Calendar, User } from 'lucide-react';
+import { Search, FileText, Calendar, User, X } from 'lucide-react';
 import axios from 'axios';
 
 const PAGE_SIZE = 10;
 
 const Repository = () => {
   const { type } = useParams();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
@@ -29,6 +29,18 @@ const Repository = () => {
 
   const currentConfig = typeConfig[type] || typeConfig['all'];
 
+  // Re-read URL params when they change
+  useEffect(() => {
+    setFilters({
+      search: searchParams.get('search') || '',
+      department: searchParams.get('department') || '',
+      project_type: searchParams.get('type') || '',
+      year: '',
+      status: ''
+    });
+    setPage(1);
+  }, [searchParams.toString()]);
+
   useEffect(() => {
     setPage(1);
     fetchProjects();
@@ -45,9 +57,7 @@ const Repository = () => {
 
       const response = await axios.get(`/api/projects?${params}`);
       let data = response.data || [];
-
       if (filters.year) data = data.filter(p => String(p.year) === String(filters.year));
-
       setProjects(data);
     } catch (error) {
       console.error('Error fetching projects:', error);
@@ -66,6 +76,20 @@ const Repository = () => {
     fetchProjects();
   };
 
+  const clearFilters = () => {
+    setFilters({ search: '', department: '', project_type: '', year: '', status: '' });
+    setSearchParams({});
+  };
+
+  const hasActiveFilters = filters.search || filters.department || filters.project_type || filters.year || filters.status;
+
+  const getTitle = () => {
+    if (filters.department && filters.project_type) return `${filters.department} — ${filters.project_type}`;
+    if (filters.department) return filters.department;
+    if (filters.project_type) return filters.project_type;
+    return currentConfig.title;
+  };
+
   const getYears = () => {
     const years = [];
     for (let y = new Date().getFullYear(); y >= 2019; y--) years.push(y);
@@ -82,7 +106,7 @@ const Repository = () => {
     <div style={{ padding: '2rem 0', minHeight: '80vh' }}>
       <div className="container">
         <div style={{ marginBottom: '2rem' }}>
-          <h1 className="section-title">{currentConfig.title}</h1>
+          <h1 className="section-title">{getTitle()}</h1>
 
           {/* Search Bar */}
           <form onSubmit={handleSearch} className="search-container repository-search">
@@ -130,6 +154,11 @@ const Repository = () => {
               <option value="completed">Completed</option>
               <option value="ongoing">Ongoing</option>
             </select>
+            {hasActiveFilters && (
+              <button onClick={clearFilters} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', padding: '0.55rem 1rem', border: '2px solid #e2e8f0', borderRadius: '8px', background: 'white', cursor: 'pointer', color: '#64748b', fontSize: '0.9rem' }}>
+                <X size={14} /> Clear Filters
+              </button>
+            )}
           </div>
         </div>
 
@@ -153,7 +182,10 @@ const Repository = () => {
           <div style={{ textAlign: 'center', padding: '3rem' }}>
             <FileText size={48} style={{ color: '#64748b', marginBottom: '1rem' }} />
             <div style={{ fontSize: '1.2rem', color: '#64748b' }}>No projects found</div>
-            <p style={{ color: '#94a3b8' }}>Try adjusting your search or filters</p>
+            <p style={{ color: '#94a3b8', marginBottom: '1rem' }}>Try adjusting your search or filters</p>
+            {hasActiveFilters && (
+              <button onClick={clearFilters} className="btn btn-secondary">Clear Filters</button>
+            )}
           </div>
         ) : (
           <>
@@ -165,18 +197,17 @@ const Repository = () => {
                     <div className="project-meta">
                       <span><User size={16} /> {project.authors}</span>
                       <span><Calendar size={16} /> {project.year}</span>
-                      <span style={{
-                        background: project.department === 'Industrial Engineering' ? '#1e3a8a' : '#f97316',
-                        color: 'white', padding: '0.25rem 0.5rem', borderRadius: '4px', fontSize: '0.8rem'
-                      }}>
+                      <span style={{ background: project.department === 'Industrial Engineering' ? '#1e3a8a' : '#f97316', color: 'white', padding: '0.25rem 0.5rem', borderRadius: '4px', fontSize: '0.8rem' }}>
                         {project.department}
                       </span>
                     </div>
                     {project.abstract && <p className="project-abstract">{truncateText(project.abstract)}</p>}
-                    <div className="project-tags">
-                      <span className="tag">{project.project_type}</span>
-                      {project.status && <span className="tag">{project.status}</span>}
-                      {project.adviser && <span className="tag">Adviser: {project.adviser}</span>}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.75rem' }}>
+                      <div className="project-tags" style={{ margin: 0 }}>
+                        <span className="tag">{project.project_type}</span>
+                        {project.status && <span className="tag">{project.status}</span>}
+                      </div>
+                      <span style={{ color: '#f97316', fontSize: '0.85rem', fontWeight: '600', whiteSpace: 'nowrap' }}>View Project →</span>
                     </div>
                   </div>
                 </Link>
@@ -186,27 +217,18 @@ const Repository = () => {
             {/* Pagination */}
             {totalPages > 1 && (
               <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem', marginTop: '2rem', flexWrap: 'wrap' }}>
-                <button
-                  onClick={() => setPage(p => Math.max(1, p - 1))}
-                  disabled={page === 1}
-                  style={{ padding: '0.5rem 1rem', border: '1px solid #e2e8f0', borderRadius: '8px', background: 'white', cursor: page === 1 ? 'not-allowed' : 'pointer', color: page === 1 ? '#94a3b8' : '#1e3a8a' }}
-                >
+                <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
+                  style={{ padding: '0.5rem 1rem', border: '1px solid #e2e8f0', borderRadius: '8px', background: 'white', cursor: page === 1 ? 'not-allowed' : 'pointer', color: page === 1 ? '#94a3b8' : '#1e3a8a' }}>
                   Previous
                 </button>
                 {Array.from({ length: totalPages }, (_, i) => i + 1).map(n => (
-                  <button
-                    key={n}
-                    onClick={() => setPage(n)}
-                    style={{ padding: '0.5rem 0.875rem', border: '1px solid #e2e8f0', borderRadius: '8px', background: page === n ? '#1e3a8a' : 'white', color: page === n ? 'white' : '#1e3a8a', cursor: 'pointer', fontWeight: page === n ? '600' : '400' }}
-                  >
+                  <button key={n} onClick={() => setPage(n)}
+                    style={{ padding: '0.5rem 0.875rem', border: '1px solid #e2e8f0', borderRadius: '8px', background: page === n ? '#1e3a8a' : 'white', color: page === n ? 'white' : '#1e3a8a', cursor: 'pointer', fontWeight: page === n ? '600' : '400' }}>
                     {n}
                   </button>
                 ))}
-                <button
-                  onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-                  disabled={page === totalPages}
-                  style={{ padding: '0.5rem 1rem', border: '1px solid #e2e8f0', borderRadius: '8px', background: 'white', cursor: page === totalPages ? 'not-allowed' : 'pointer', color: page === totalPages ? '#94a3b8' : '#1e3a8a' }}
-                >
+                <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}
+                  style={{ padding: '0.5rem 1rem', border: '1px solid #e2e8f0', borderRadius: '8px', background: 'white', cursor: page === totalPages ? 'not-allowed' : 'pointer', color: page === totalPages ? '#94a3b8' : '#1e3a8a' }}>
                   Next
                 </button>
               </div>
