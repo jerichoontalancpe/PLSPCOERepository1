@@ -64,10 +64,10 @@ router.post('/', upload.single('pdf'), async (req, res) => {
     if (req.file) {
       const filename = `${Date.now()}-${Math.round(Math.random() * 1e9)}.pdf`;
       const { error: uploadError } = await supabase.storage
-        .from('pdfs')
+        .from("PDF's")
         .upload(filename, req.file.buffer, { contentType: 'application/pdf' });
       if (!uploadError) {
-        const { data: urlData } = supabase.storage.from('pdfs').getPublicUrl(filename);
+        const { data: urlData } = supabase.storage.from("PDF's").getPublicUrl(filename);
         pdf_url = urlData.publicUrl;
       }
     }
@@ -100,10 +100,10 @@ router.put('/:id', upload.single('pdf'), async (req, res) => {
     if (req.file) {
       const filename = `${Date.now()}-${Math.round(Math.random() * 1e9)}.pdf`;
       const { error: uploadError } = await supabase.storage
-        .from('pdfs')
+        .from("PDF's")
         .upload(filename, req.file.buffer, { contentType: 'application/pdf' });
       if (!uploadError) {
-        const { data: urlData } = supabase.storage.from('pdfs').getPublicUrl(filename);
+        const { data: urlData } = supabase.storage.from("PDF's").getPublicUrl(filename);
         updateData.pdf_filename = urlData.publicUrl;
       }
     }

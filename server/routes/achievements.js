@@ -31,12 +31,12 @@ router.post('/', upload.single('image'), async (req, res) => {
       const ext = req.file.mimetype.split('/')[1];
       const filename = `achievements/${Date.now()}-${Math.round(Math.random() * 1e9)}.${ext}`;
       const { error: uploadError } = await supabase.storage
-        .from('images')
+        .from('Images')
         .upload(filename, req.file.buffer, { contentType: req.file.mimetype });
       if (uploadError) {
         console.error('Image upload error:', uploadError.message);
       } else {
-        const { data: urlData } = supabase.storage.from('images').getPublicUrl(filename);
+        const { data: urlData } = supabase.storage.from('Images').getPublicUrl(filename);
         image_url = urlData.publicUrl;
       }
     }
@@ -63,12 +63,12 @@ router.put('/:id', upload.single('image'), async (req, res) => {
       const ext = req.file.mimetype.split('/')[1];
       const filename = `achievements/${Date.now()}-${Math.round(Math.random() * 1e9)}.${ext}`;
       const { error: uploadError } = await supabase.storage
-        .from('images')
+        .from('Images')
         .upload(filename, req.file.buffer, { contentType: req.file.mimetype });
       if (uploadError) {
         console.error('Image upload error:', uploadError.message);
       } else {
-        const { data: urlData } = supabase.storage.from('images').getPublicUrl(filename);
+        const { data: urlData } = supabase.storage.from('Images').getPublicUrl(filename);
         updateData.image_filename = urlData.publicUrl;
       }
     }
