@@ -136,6 +136,12 @@ const AdminLogin = () => {
             {loading ? 'Signing in...' : 'Sign In'}
           </button>
         </form>
+
+        <div style={{ textAlign: 'center', marginTop: '1.5rem' }}>
+          <Link to="/admin/forgot-password" style={{ color: '#1e3a8a', fontSize: '0.9rem' }}>
+            Forgot your password?
+          </Link>
+        </div>
       </div>
     </div>
   );
