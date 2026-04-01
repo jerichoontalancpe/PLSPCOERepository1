@@ -293,9 +293,9 @@ const Home = () => {
       <section className="quick-access">
         <div className="container">
           <h2 className="section-title">Quick Access</h2>
-          <div style={{
+          <div className="quick-access-grid" style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+            gridTemplateColumns: '1fr 1fr',
             gap: '2rem',
             maxWidth: '800px',
             margin: '0 auto'

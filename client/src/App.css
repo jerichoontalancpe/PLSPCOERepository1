@@ -661,6 +661,11 @@ body {
     margin-bottom: 1.75rem;
   }
 
+  .access-grid,
+  .quick-access-grid {
+    grid-template-columns: 1fr !important;
+  }
+
   .filters {
     flex-direction: column;
   }
