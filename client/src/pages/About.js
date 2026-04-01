@@ -2,6 +2,49 @@ import React, { useState, useEffect } from 'react';
 import { BookOpen, Target, Eye, Users, Award } from 'lucide-react';
 import axios from 'axios';
 
+const AchievementCard = ({ achievement }) => {
+  const [expanded, setExpanded] = useState(false);
+  const maxLen = 120;
+  const isLong = achievement.description && achievement.description.length > maxLen;
+
+  return (
+    <div style={{
+      background: 'white', borderRadius: '16px', overflow: 'hidden',
+      boxShadow: '0 2px 12px rgba(0,0,0,0.08)', border: '1px solid #e2e8f0',
+      transition: 'transform 0.2s, box-shadow 0.2s',
+    }}
+      onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = '0 12px 32px rgba(0,0,0,0.15)'; }}
+      onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 2px 12px rgba(0,0,0,0.08)'; }}
+    >
+      {achievement.image_filename ? (
+        <img src={achievement.image_filename} alt={achievement.title} style={{ width: '100%', height: '220px', objectFit: 'cover' }} />
+      ) : (
+        <div style={{ width: '100%', height: '220px', background: 'linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <Award size={48} style={{ color: 'rgba(255,255,255,0.5)' }} />
+        </div>
+      )}
+      <div style={{ padding: '1.5rem' }}>
+        <div style={{ display: 'inline-block', background: '#eff6ff', color: '#1e3a8a', fontSize: '0.75rem', fontWeight: '600', padding: '0.2rem 0.65rem', borderRadius: '20px', marginBottom: '0.65rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+          Achievement
+        </div>
+        <h3 style={{ color: '#1e293b', marginBottom: '0.5rem', fontSize: '1.05rem', fontWeight: '600', lineHeight: '1.4' }}>{achievement.title}</h3>
+        {achievement.description && (
+          <>
+            <p style={{ color: '#64748b', fontSize: '0.9rem', lineHeight: '1.6', whiteSpace: 'pre-wrap' }}>
+              {expanded || !isLong ? achievement.description : achievement.description.substring(0, maxLen) + '...'}
+            </p>
+            {isLong && (
+              <button onClick={() => setExpanded(e => !e)} style={{ marginTop: '0.5rem', background: 'none', border: 'none', color: '#f97316', fontWeight: '600', fontSize: '0.85rem', cursor: 'pointer', padding: 0 }}>
+                {expanded ? 'Show Less ↑' : 'Read More ↓'}
+              </button>
+            )}
+          </>
+        )}
+      </div>
+    </div>
+  );
+};
+
 const About = () => {
   const [achievements, setAchievements] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -96,31 +139,7 @@ const About = () => {
           ) : (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '2rem' }}>
               {achievements.map((achievement) => (
-                <div key={achievement.id} style={{
-                  background: 'white', borderRadius: '16px', overflow: 'hidden',
-                  boxShadow: '0 2px 12px rgba(0,0,0,0.08)', border: '1px solid #e2e8f0',
-                  transition: 'transform 0.2s, box-shadow 0.2s',
-                }}
-                  onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = '0 12px 32px rgba(0,0,0,0.15)'; }}
-                  onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 2px 12px rgba(0,0,0,0.08)'; }}
-                >
-                  {achievement.image_filename ? (
-                    <img src={achievement.image_filename} alt={achievement.title} style={{ width: '100%', height: '220px', objectFit: 'cover' }} />
-                  ) : (
-                    <div style={{ width: '100%', height: '220px', background: 'linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <Award size={48} style={{ color: 'rgba(255,255,255,0.5)' }} />
-                    </div>
-                  )}
-                  <div style={{ padding: '1.5rem' }}>
-                    <div style={{ display: 'inline-block', background: '#eff6ff', color: '#1e3a8a', fontSize: '0.75rem', fontWeight: '600', padding: '0.2rem 0.65rem', borderRadius: '20px', marginBottom: '0.65rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                      Achievement
-                    </div>
-                    <h3 style={{ color: '#1e293b', marginBottom: '0.5rem', fontSize: '1.05rem', fontWeight: '600', lineHeight: '1.4' }}>{achievement.title}</h3>
-                    {achievement.description && (
-                      <p style={{ color: '#64748b', fontSize: '0.9rem', lineHeight: '1.6', whiteSpace: 'pre-wrap' }}>{achievement.description}</p>
-                    )}
-                  </div>
-                </div>
+                <AchievementCard key={achievement.id} achievement={achievement} />
               ))}
             </div>
           )}

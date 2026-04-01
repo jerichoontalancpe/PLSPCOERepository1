@@ -54,7 +54,11 @@ const Home = () => {
     <div>
       {/* Hero */}
       <section className="hero" style={{ backgroundImage: 'url(/cover-photo.jpg)', backgroundSize: 'cover', backgroundPosition: 'center', position: 'relative' }}>
-        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, rgba(30,58,138,0.85) 0%, rgba(30,64,175,0.85) 100%)', zIndex: 1 }} />
+        <div style={{
+          position: 'absolute', inset: 0,
+          background: 'linear-gradient(135deg, rgba(30,58,138,0.75) 0%, rgba(30,64,175,0.75) 100%)',
+          zIndex: 1
+        }} />
         <div className="hero-content" style={{ position: 'relative', zIndex: 2 }}>
           {/* Desktop: logo | title | logo */}
           <div className="hero-logos hero-logos-desktop">
@@ -129,10 +133,10 @@ const Home = () => {
           <h2 className="section-title">Repository Overview</h2>
           {!loading && stats ? (
             <div className="stats-grid">
-              <div className="stat-card"><div className="stat-number">{stats.total}</div><div className="stat-label">Total Projects</div></div>
-              <div className="stat-card"><div className="stat-number">{stats.departments}</div><div className="stat-label">Departments</div></div>
-              <div className="stat-card"><div className="stat-number">{stats.years}</div><div className="stat-label">Years of Research</div></div>
-              <div className="stat-card"><div className="stat-number">{stats.contributors}</div><div className="stat-label">Student Contributors</div></div>
+              <div className="stat-card fade-in fade-in-1"><div className="stat-number">{stats.total}</div><div className="stat-label">Total Projects</div></div>
+              <div className="stat-card fade-in fade-in-2"><div className="stat-number">{stats.departments}</div><div className="stat-label">Departments</div></div>
+              <div className="stat-card fade-in fade-in-3"><div className="stat-number">{stats.years}</div><div className="stat-label">Years of Research</div></div>
+              <div className="stat-card fade-in fade-in-4"><div className="stat-number">{stats.contributors}</div><div className="stat-label">Student Contributors</div></div>
             </div>
           ) : (
             <div className="stats-grid">
