@@ -117,7 +117,7 @@ const About = () => {
                     </div>
                     <h3 style={{ color: '#1e293b', marginBottom: '0.5rem', fontSize: '1.05rem', fontWeight: '600', lineHeight: '1.4' }}>{achievement.title}</h3>
                     {achievement.description && (
-                      <p style={{ color: '#64748b', fontSize: '0.9rem', lineHeight: '1.6' }}>{achievement.description}</p>
+                      <p style={{ color: '#64748b', fontSize: '0.9rem', lineHeight: '1.6', whiteSpace: 'pre-wrap' }}>{achievement.description}</p>
                     )}
                   </div>
                 </div>
