@@ -15,6 +15,8 @@ const AdminDashboard = () => {
     vision: 'To be a leading institution in engineering education and research.'
   });
   const [editingMissionVision, setEditingMissionVision] = useState(false);
+  const [savedMissionVision, setSavedMissionVision] = useState({ mission: '', vision: '' });
+  const [tableSearch, setTableSearch] = useState('');
 
   const [formData, setFormData] = useState({
     title: '', authors: '', adviser: '', year: '', abstract: '', keywords: '', department: 'Computer Engineering', project_type: 'MOR', status: 'completed'
@@ -42,10 +44,9 @@ const AdminDashboard = () => {
       setAchievements(achievementsRes.data || []);
       const s = settingsRes.data || {};
       if (s.mission || s.vision) {
-        setMissionVision({
-          mission: s.mission || missionVision.mission,
-          vision: s.vision || missionVision.vision
-        });
+        const mv = { mission: s.mission || missionVision.mission, vision: s.vision || missionVision.vision };
+        setMissionVision(mv);
+        setSavedMissionVision(mv);
       }
     } catch (error) {
       console.error('Error loading data:', error);
@@ -219,6 +220,16 @@ const AdminDashboard = () => {
         {/* Content */}
         {activeTab === 'projects' ? (
           <div style={{ background: 'white', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }}>
+            {/* Table search */}
+            <div style={{ padding: '1rem 1rem 0' }}>
+              <input
+                type="text"
+                placeholder="Search projects by title, author, or type..."
+                value={tableSearch}
+                onChange={e => setTableSearch(e.target.value)}
+                style={{ width: '100%', padding: '0.65rem 1rem', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '0.9rem', outline: 'none' }}
+              />
+            </div>
             <div style={{ overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
@@ -232,30 +243,46 @@ const AdminDashboard = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {projects.map((project) => (
-                    <tr key={project.id} style={{ borderBottom: '1px solid #e2e8f0' }}>
-                      <td style={{ padding: '1rem' }}>
-                        <div style={{ fontWeight: '500', color: '#1e3a8a', marginBottom: '0.25rem' }}>{project.title}</div>
-                        <div style={{ fontSize: '0.875rem', color: '#64748b' }}>{project.abstract ? project.abstract.substring(0, 100) + '...' : 'No abstract'}</div>
-                      </td>
-                      <td style={{ padding: '1rem', color: '#64748b' }}>{project.authors}</td>
-                      <td style={{ padding: '1rem' }}>
-                        <span style={{ background: '#dbeafe', color: '#1e40af', padding: '0.25rem 0.75rem', borderRadius: '9999px', fontSize: '0.875rem', fontWeight: '500' }}>{project.department}</span>
-                      </td>
-                      <td style={{ padding: '1rem', color: '#64748b' }}>{project.project_type}</td>
-                      <td style={{ padding: '1rem', color: '#64748b' }}>{project.year}</td>
-                      <td style={{ padding: '1rem' }}>
-                        <div style={{ display: 'flex', gap: '0.5rem' }}>
-                          <button onClick={() => { setEditingProject(project); setFormData(project); setShowModal(true); }} style={{ background: 'none', border: 'none', color: '#1e3a8a', cursor: 'pointer', padding: '0.5rem' }}>
-                            <Edit size={16} />
-                          </button>
-                          <button onClick={() => handleDelete(project.id)} style={{ background: 'none', border: 'none', color: '#dc2626', cursor: 'pointer', padding: '0.5rem' }}>
-                            <Trash2 size={16} />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
+                  {loading ? (
+                    <tr><td colSpan="6" style={{ padding: '2rem', textAlign: 'center', color: '#64748b' }}>Loading projects...</td></tr>
+                  ) : projects.filter(p =>
+                      !tableSearch ||
+                      p.title?.toLowerCase().includes(tableSearch.toLowerCase()) ||
+                      p.authors?.toLowerCase().includes(tableSearch.toLowerCase()) ||
+                      p.project_type?.toLowerCase().includes(tableSearch.toLowerCase())
+                    ).length === 0 ? (
+                    <tr><td colSpan="6" style={{ padding: '2rem', textAlign: 'center', color: '#64748b' }}>No projects found</td></tr>
+                  ) : (
+                    projects.filter(p =>
+                      !tableSearch ||
+                      p.title?.toLowerCase().includes(tableSearch.toLowerCase()) ||
+                      p.authors?.toLowerCase().includes(tableSearch.toLowerCase()) ||
+                      p.project_type?.toLowerCase().includes(tableSearch.toLowerCase())
+                    ).map((project) => (
+                      <tr key={project.id} style={{ borderBottom: '1px solid #e2e8f0' }}>
+                        <td style={{ padding: '1rem' }}>
+                          <div style={{ fontWeight: '500', color: '#1e3a8a', marginBottom: '0.25rem' }}>{project.title}</div>
+                          <div style={{ fontSize: '0.875rem', color: '#64748b' }}>{project.abstract ? project.abstract.substring(0, 100) + '...' : 'No abstract'}</div>
+                        </td>
+                        <td style={{ padding: '1rem', color: '#64748b' }}>{project.authors}</td>
+                        <td style={{ padding: '1rem' }}>
+                          <span style={{ background: '#dbeafe', color: '#1e40af', padding: '0.25rem 0.75rem', borderRadius: '9999px', fontSize: '0.875rem', fontWeight: '500' }}>{project.department}</span>
+                        </td>
+                        <td style={{ padding: '1rem', color: '#64748b' }}>{project.project_type}</td>
+                        <td style={{ padding: '1rem', color: '#64748b' }}>{project.year}</td>
+                        <td style={{ padding: '1rem' }}>
+                          <div style={{ display: 'flex', gap: '0.5rem' }}>
+                            <button onClick={() => { setEditingProject(project); setFormData(project); setShowModal(true); }} style={{ background: 'none', border: 'none', color: '#1e3a8a', cursor: 'pointer', padding: '0.5rem' }}>
+                              <Edit size={16} />
+                            </button>
+                            <button onClick={() => handleDelete(project.id)} style={{ background: 'none', border: 'none', color: '#dc2626', cursor: 'pointer', padding: '0.5rem' }}>
+                              <Trash2 size={16} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
@@ -298,34 +325,44 @@ const AdminDashboard = () => {
                       axios.put('/api/settings/mission', { value: missionVision.mission }),
                       axios.put('/api/settings/vision', { value: missionVision.vision })
                     ]);
+                    setSavedMissionVision({ ...missionVision });
                     setEditingMissionVision(false);
                     alert('Mission & Vision updated!');
                   }} style={{ background: '#16a34a', color: 'white', border: 'none', padding: '0.5rem 1rem', borderRadius: '6px', cursor: 'pointer', fontWeight: '600' }}>Save Changes</button>
-                  <button onClick={() => setEditingMissionVision(false)} style={{ background: '#6b7280', color: 'white', border: 'none', padding: '0.5rem 1rem', borderRadius: '6px', cursor: 'pointer', fontWeight: '600' }}>Cancel</button>
+                  <button onClick={() => { setMissionVision({ ...savedMissionVision }); setEditingMissionVision(false); }} style={{ background: '#6b7280', color: 'white', border: 'none', padding: '0.5rem 1rem', borderRadius: '6px', cursor: 'pointer', fontWeight: '600' }}>Cancel</button>
                 </div>
               )}
             </div>
             
             <div style={{ padding: '1rem' }}>
               <h3 style={{ fontSize: '1.1rem', fontWeight: '600', color: '#1e3a8a', marginBottom: '1rem' }}>All Achievements ({achievements.length})</h3>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem' }}>
-                {achievements.map(achievement => (
-                  <div key={achievement.id} style={{ background: '#f8fafc', borderRadius: '8px', overflow: 'hidden', border: '1px solid #e2e8f0' }}>
-                    <div style={{ padding: '1rem' }}>
-                      <h3 style={{ color: '#1e3a8a', marginBottom: '0.5rem', fontSize: '1rem' }}>{achievement.title}</h3>
-                      <p style={{ color: '#64748b', fontSize: '0.9rem', marginBottom: '1rem' }}>{achievement.description}</p>
-                      <div style={{ display: 'flex', gap: '0.5rem' }}>
-                        <button onClick={() => { setEditingAchievement(achievement); setAchievementFormData(achievement); setShowModal(true); }} style={{ background: 'none', border: 'none', color: '#1e3a8a', cursor: 'pointer', padding: '0.5rem' }}>
-                          <Edit size={16} />
-                        </button>
-                        <button onClick={() => handleDeleteAchievement(achievement.id)} style={{ background: 'none', border: 'none', color: '#dc2626', cursor: 'pointer', padding: '0.5rem' }}>
-                          <Trash2 size={16} />
-                        </button>
+              {loading ? (
+                <div style={{ textAlign: 'center', padding: '2rem', color: '#64748b' }}>Loading achievements...</div>
+              ) : achievements.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '2rem', color: '#64748b' }}>No achievements yet. Click "Add Achievement" to get started.</div>
+              ) : (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem' }}>
+                  {achievements.map(achievement => (
+                    <div key={achievement.id} style={{ background: '#f8fafc', borderRadius: '8px', overflow: 'hidden', border: '1px solid #e2e8f0' }}>
+                      {achievement.image_filename && (
+                        <img src={achievement.image_filename} alt={achievement.title} style={{ width: '100%', height: '160px', objectFit: 'cover' }} />
+                      )}
+                      <div style={{ padding: '1rem' }}>
+                        <h3 style={{ color: '#1e3a8a', marginBottom: '0.5rem', fontSize: '1rem' }}>{achievement.title}</h3>
+                        <p style={{ color: '#64748b', fontSize: '0.9rem', marginBottom: '1rem' }}>{achievement.description}</p>
+                        <div style={{ display: 'flex', gap: '0.5rem' }}>
+                          <button onClick={() => { setEditingAchievement(achievement); setAchievementFormData(achievement); setShowModal(true); }} style={{ background: 'none', border: 'none', color: '#1e3a8a', cursor: 'pointer', padding: '0.5rem' }}>
+                            <Edit size={16} />
+                          </button>
+                          <button onClick={() => handleDeleteAchievement(achievement.id)} style={{ background: 'none', border: 'none', color: '#dc2626', cursor: 'pointer', padding: '0.5rem' }}>
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -388,6 +425,13 @@ const AdminDashboard = () => {
                     <input type="text" value={formData.keywords} onChange={(e) => setFormData({...formData, keywords: e.target.value})} style={{ width: '100%', padding: '0.75rem', border: '1px solid #d1d5db', borderRadius: '6px' }} />
                   </div>
                   <div style={{ marginBottom: '1rem' }}>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Status *</label>
+                    <select value={formData.status} onChange={(e) => setFormData({...formData, status: e.target.value})} required style={{ width: '100%', padding: '0.75rem', border: '1px solid #d1d5db', borderRadius: '6px' }}>
+                      <option value="completed">Completed</option>
+                      <option value="ongoing">Ongoing</option>
+                    </select>
+                  </div>
+                  <div style={{ marginBottom: '1rem' }}>
                     <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Upload PDF</label>
                     <input type="file" accept="application/pdf" onChange={(e) => setPdfFile(e.target.files[0])} style={{ width: '100%', padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '6px' }} />
                     {editingProject?.pdf_filename && !pdfFile && (
@@ -413,7 +457,7 @@ const AdminDashboard = () => {
                     <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Upload Image</label>
                     <input type="file" accept="image/*" onChange={(e) => setImageFile(e.target.files[0])} style={{ width: '100%', padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '6px' }} />
                     {editingAchievement?.image_filename && !imageFile && (
-                      <div style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '0.25rem' }}>Current: {editingAchievement.image_filename}</div>
+                      <img src={editingAchievement.image_filename} alt="Current" style={{ marginTop: '0.5rem', width: '100%', height: '140px', objectFit: 'cover', borderRadius: '6px' }} />
                     )}
                   </div>
                   <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
