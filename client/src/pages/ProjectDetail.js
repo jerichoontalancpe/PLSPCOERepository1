@@ -262,12 +262,7 @@ const ProjectDetail = () => {
                 marginBottom: '2rem',
                 textAlign: 'center'
               }}>
-                <h3 style={{ 
-                  fontSize: '1.25rem', 
-                  fontWeight: '600', 
-                  color: '#1e3a8a',
-                  marginBottom: '1rem'
-                }}>
+                <h3 style={{ fontSize: '1.25rem', fontWeight: '600', color: '#1e3a8a', marginBottom: '1rem' }}>
                   Document
                 </h3>
                 <a 
@@ -275,11 +270,16 @@ const ProjectDetail = () => {
                   target="_blank"
                   rel="noopener noreferrer"
                   className="btn btn-primary"
-                  style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none' }}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none', marginBottom: '1rem' }}
                 >
                   <Download size={20} />
                   Download PDF
                 </a>
+                <iframe
+                  src={project.pdf_filename}
+                  title="PDF Preview"
+                  style={{ width: '100%', height: '400px', border: '1px solid #e2e8f0', borderRadius: '8px', marginTop: '0.5rem' }}
+                />
               </div>
             )}
 

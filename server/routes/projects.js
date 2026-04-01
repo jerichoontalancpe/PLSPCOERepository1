@@ -17,11 +17,12 @@ const upload = multer({
 // Get projects by filters
 router.get('/', async (req, res) => {
   try {
-    const { department, type, search } = req.query;
+    const { department, type, search, status } = req.query;
     
     let query = supabase.from('projects').select('*');
     if (department) query = query.eq('department', department);
     if (type) query = query.eq('project_type', type);
+    if (status) query = query.eq('status', status);
     
     const { data, error } = await query.order('year', { ascending: false });
     if (error) throw error;
