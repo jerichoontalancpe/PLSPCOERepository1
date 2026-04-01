@@ -207,11 +207,11 @@ const AdminDashboard = () => {
 
         {/* Tabs */}
         <div style={{ display: 'flex', borderBottom: '2px solid #e2e8f0' }}>
-          <button onClick={() => setActiveTab('projects')} style={{ padding: '1rem 2rem', background: activeTab === 'projects' ? '#1e3a8a' : 'transparent', color: activeTab === 'projects' ? 'white' : '#64748b', border: 'none', borderRadius: '8px 8px 0 0', cursor: 'pointer', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <button onClick={() => { setActiveTab('projects'); setEditingProject(null); setEditingAchievement(null); }} style={{ padding: '1rem 2rem', background: activeTab === 'projects' ? '#1e3a8a' : 'transparent', color: activeTab === 'projects' ? 'white' : '#64748b', border: 'none', borderRadius: '8px 8px 0 0', cursor: 'pointer', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <FileText size={18} />
             Projects
           </button>
-          <button onClick={() => setActiveTab('achievements')} style={{ padding: '1rem 2rem', background: activeTab === 'achievements' ? '#1e3a8a' : 'transparent', color: activeTab === 'achievements' ? 'white' : '#64748b', border: 'none', borderRadius: '8px 8px 0 0', cursor: 'pointer', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <button onClick={() => { setActiveTab('achievements'); setEditingProject(null); setEditingAchievement(null); }} style={{ padding: '1rem 2rem', background: activeTab === 'achievements' ? '#1e3a8a' : 'transparent', color: activeTab === 'achievements' ? 'white' : '#64748b', border: 'none', borderRadius: '8px 8px 0 0', cursor: 'pointer', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <Award size={18} />
             Achievements
           </button>

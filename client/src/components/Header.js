@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Menu, X } from 'lucide-react';
 
@@ -16,6 +16,7 @@ const Header = () => {
   };
 
   const closeMenu = () => setMenuOpen(false);
+  const navClass = ({ isActive }) => isActive ? 'active' : undefined;
 
   return (
     <header className="header">
@@ -29,24 +30,18 @@ const Header = () => {
           <img src="/plsp-logo.jpg" alt="PLSP" style={{ width: '50px', height: '50px', borderRadius: '8px' }} />
         </div>
 
-        {/* Hamburger button — mobile only */}
-        <button
-          onClick={() => setMenuOpen(o => !o)}
-          style={{ display: 'none', background: 'none', border: 'none', color: 'white', cursor: 'pointer' }}
-          className="hamburger-btn"
-          aria-label="Toggle menu"
-        >
+        <button onClick={() => setMenuOpen(o => !o)} style={{ display: 'none', background: 'none', border: 'none', color: 'white', cursor: 'pointer' }} className="hamburger-btn" aria-label="Toggle menu">
           {menuOpen ? <X size={26} /> : <Menu size={26} />}
         </button>
 
         <nav className={`nav-wrapper${menuOpen ? ' nav-open' : ''}`}>
           <ul className="nav-links" onClick={closeMenu}>
-            <li><Link to="/">Home</Link></li>
-            <li><Link to="/about">About</Link></li>
-            <li><Link to="/repository/all">Repository</Link></li>
+            <li><NavLink to="/" end className={navClass}>Home</NavLink></li>
+            <li><NavLink to="/about" className={navClass}>About</NavLink></li>
+            <li><NavLink to="/repository/all" className={navClass}>Repository</NavLink></li>
             {user ? (
               <>
-                <li><Link to="/admin/dashboard">Dashboard</Link></li>
+                <li><NavLink to="/admin/dashboard" className={navClass}>Dashboard</NavLink></li>
                 <li>
                   <button onClick={handleLogout} style={{ background: 'none', border: 'none', color: 'white', cursor: 'pointer', fontSize: '0.95rem', fontWeight: '500', padding: 0, lineHeight: 'inherit', verticalAlign: 'middle' }}>
                     Logout
@@ -54,7 +49,7 @@ const Header = () => {
                 </li>
               </>
             ) : (
-              <li><Link to="/admin/login">Admin</Link></li>
+              <li><NavLink to="/admin/login" className={navClass}>Admin</NavLink></li>
             )}
           </ul>
         </nav>

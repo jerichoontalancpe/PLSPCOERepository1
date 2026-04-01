@@ -398,6 +398,26 @@ body {
   box-shadow: 0 2px 8px rgba(0,0,0,0.07);
 }
 
+.nav-links a.active {
+  color: var(--orange);
+}
+
+/* Hero departments row */
+.hero-departments {
+  display: flex;
+  justify-content: center;
+  gap: 4rem;
+  margin-bottom: 2rem;
+  opacity: 0.9;
+}
+
+/* Project detail 2-col grid */
+.project-detail-grid {
+  display: grid;
+  gap: 2rem;
+  grid-template-columns: 2fr 1fr;
+}
+
 /* Footer */
 .footer {
   background: var(--navy-blue);
@@ -669,6 +689,14 @@ body {
   .access-grid,
   .quick-access-grid {
     grid-template-columns: 1fr !important;
+  }
+
+  .hero-departments {
+    gap: 1.5rem;
+  }
+
+  .project-detail-grid {
+    grid-template-columns: 1fr;
   }
 
   .filters {

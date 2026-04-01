@@ -30,8 +30,23 @@ const ProjectDetail = () => {
     return (
       <div style={{ padding: '2rem 0', minHeight: '80vh' }}>
         <div className="container">
-          <div style={{ textAlign: 'center', padding: '3rem' }}>
-            <div style={{ fontSize: '1.2rem', color: '#64748b' }}>Loading project...</div>
+          <div className="skeleton" style={{ height: '20px', width: '140px', marginBottom: '2rem' }} />
+          <div className="skeleton-card" style={{ marginBottom: '2rem' }}>
+            <div className="skeleton" style={{ height: '32px', width: '70%', marginBottom: '1rem' }} />
+            <div className="skeleton" style={{ height: '16px', width: '40%', marginBottom: '0.5rem' }} />
+            <div className="skeleton" style={{ height: '16px', width: '30%' }} />
+          </div>
+          <div style={{ display: 'grid', gap: '2rem', gridTemplateColumns: '2fr 1fr' }}>
+            <div className="skeleton-card">
+              <div className="skeleton" style={{ height: '24px', width: '30%', marginBottom: '1rem' }} />
+              <div className="skeleton" style={{ height: '14px', width: '100%', marginBottom: '0.5rem' }} />
+              <div className="skeleton" style={{ height: '14px', width: '90%', marginBottom: '0.5rem' }} />
+              <div className="skeleton" style={{ height: '14px', width: '80%' }} />
+            </div>
+            <div className="skeleton-card">
+              <div className="skeleton" style={{ height: '40px', width: '100%', marginBottom: '1rem' }} />
+              <div className="skeleton" style={{ height: '14px', width: '80%' }} />
+            </div>
           </div>
         </div>
       </div>
@@ -61,16 +76,8 @@ const ProjectDetail = () => {
       <div className="container">
         {/* Back Button */}
         <Link 
-          to="/" 
-          style={{ 
-            display: 'inline-flex', 
-            alignItems: 'center', 
-            gap: '0.5rem',
-            color: '#1e3a8a',
-            textDecoration: 'none',
-            marginBottom: '2rem',
-            fontWeight: '500'
-          }}
+          to="/repository/all" 
+          style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', color: '#1e3a8a', textDecoration: 'none', marginBottom: '2rem', fontWeight: '500' }}
         >
           <ArrowLeft size={20} />
           Back to Repository
@@ -175,7 +182,7 @@ const ProjectDetail = () => {
         </div>
 
         {/* Project Content */}
-        <div style={{ display: 'grid', gap: '2rem', gridTemplateColumns: '2fr 1fr' }}>
+        <div className="project-detail-grid">
           {/* Main Content */}
           <div>
             {/* Abstract */}
