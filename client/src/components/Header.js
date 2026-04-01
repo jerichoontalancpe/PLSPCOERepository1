@@ -48,7 +48,7 @@ const Header = () => {
               <>
                 <li><Link to="/admin/dashboard">Dashboard</Link></li>
                 <li>
-                  <button onClick={handleLogout} style={{ background: 'none', border: 'none', color: 'white', cursor: 'pointer', fontSize: '1rem', fontWeight: '500' }}>
+                  <button onClick={handleLogout} style={{ background: 'none', border: 'none', color: 'white', cursor: 'pointer', fontSize: '0.95rem', fontWeight: '500', padding: 0, lineHeight: 'inherit', verticalAlign: 'middle' }}>
                     Logout
                   </button>
                 </li>
