@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BookOpen, Target, Eye, Users, Award } from 'lucide-react';
+import { BookOpen, Target, Eye, Users, Award, ArrowUp } from 'lucide-react';
 import axios from 'axios';
 
 const AchievementCard = ({ achievement }) => {
@@ -49,9 +49,13 @@ const About = () => {
   const [achievements, setAchievements] = useState([]);
   const [loading, setLoading] = useState(true);
   const [missionVision, setMissionVision] = useState({ mission: '', vision: '' });
+  const [showBackToTop, setShowBackToTop] = useState(false);
 
   useEffect(() => {
     fetchData();
+    const onScroll = () => setShowBackToTop(window.scrollY > 400);
+    window.addEventListener('scroll', onScroll);
+    return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
   const fetchData = async () => {
@@ -178,6 +182,17 @@ const About = () => {
         </div>
 
       </div>
+
+      {/* Back to Top */}
+      {showBackToTop && (
+        <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          style={{ position: 'fixed', bottom: '2rem', right: '2rem', width: '44px', height: '44px', borderRadius: '50%', background: '#1e3a8a', color: 'white', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 12px rgba(0,0,0,0.2)', zIndex: 999, transition: 'background 0.2s' }}
+          onMouseEnter={e => e.currentTarget.style.background = '#f97316'}
+          onMouseLeave={e => e.currentTarget.style.background = '#1e3a8a'}
+        >
+          <ArrowUp size={20} />
+        </button>
+      )}
     </div>
   );
 };

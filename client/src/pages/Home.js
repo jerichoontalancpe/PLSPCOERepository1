@@ -1,12 +1,43 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, BookOpen, Cpu, Wrench, GraduationCap, Users } from 'lucide-react';
+import { Search, BookOpen, Cpu, Wrench, GraduationCap, Users, ArrowRight } from 'lucide-react';
 import axios from 'axios';
+
+// Animated counter hook
+const useCounter = (target, duration = 1500) => {
+  const [count, setCount] = useState(0);
+  const started = useRef(false);
+  useEffect(() => {
+    if (target === 0 || started.current) return;
+    started.current = true;
+    const steps = 40;
+    const increment = target / steps;
+    let current = 0;
+    const timer = setInterval(() => {
+      current += increment;
+      if (current >= target) { setCount(target); clearInterval(timer); }
+      else setCount(Math.floor(current));
+    }, duration / steps);
+    return () => clearInterval(timer);
+  }, [target, duration]);
+  return count;
+};
+
+const StatCard = ({ value, label, delay }) => {
+  const count = useCounter(value);
+  return (
+    <div className={`stat-card fade-in`} style={{ animationDelay: `${delay}s` }}>
+      <div className="stat-number">{count}</div>
+      <div className="stat-label">{label}</div>
+    </div>
+  );
+};
 
 const Home = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [latestProjects, setLatestProjects] = useState([]);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -21,15 +52,13 @@ const Home = () => {
       setLoading(true);
       const response = await axios.get('/api/projects');
       const projects = response.data || [];
-
       const total = projects.length;
       const contributors = projects.reduce((sum, p) => sum + (p.authors ? p.authors.split(',').length : 0), 0);
       const uniqueYears = [...new Set(projects.map(p => p.year))];
       const uniqueDepts = [...new Set(projects.map(p => p.department).filter(Boolean))];
-
       setStats({ total, contributors, years: uniqueYears.length, departments: uniqueDepts.length });
+      setLatestProjects(projects.slice(0, 3));
     } catch (error) {
-      console.error('Error fetching stats:', error);
       setStats({ total: 0, contributors: 0, years: 0, departments: 0 });
     } finally {
       setLoading(false);
@@ -38,9 +67,7 @@ const Home = () => {
 
   const handleSearch = (e) => {
     e.preventDefault();
-    if (searchTerm.trim()) {
-      navigate(`/repository/all?search=${encodeURIComponent(searchTerm)}`);
-    }
+    if (searchTerm.trim()) navigate(`/repository/all?search=${encodeURIComponent(searchTerm)}`);
   };
 
   const quickAccessItems = [
@@ -54,33 +81,31 @@ const Home = () => {
     <div>
       {/* Hero */}
       <section className="hero" style={{ backgroundImage: 'url(/cover-photo.jpg)', backgroundSize: 'cover', backgroundPosition: 'center', position: 'relative' }}>
-        <div style={{
-          position: 'absolute', inset: 0,
-          background: 'linear-gradient(135deg, rgba(30,58,138,0.75) 0%, rgba(30,64,175,0.75) 100%)',
-          zIndex: 1
-        }} />
+        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, rgba(30,58,138,0.75) 0%, rgba(30,64,175,0.75) 100%)', zIndex: 1 }} />
         <div className="hero-content" style={{ position: 'relative', zIndex: 2 }}>
-          {/* Desktop: logo | title | logo */}
+          {/* Desktop */}
           <div className="hero-logos hero-logos-desktop">
             <img src="/coe-logo.jpg" alt="College of Engineering" className="hero-logo" />
             <div className="hero-logos-text">
-              <h1 style={{ margin: 0, fontSize: '3rem', fontWeight: '700', lineHeight: '1.1' }}>College of Engineering</h1>
+              <h1 style={{ margin: 0, fontSize: '3rem', fontWeight: '700', lineHeight: '1.1' }}>
+                College of <span style={{ color: '#f97316' }}>Engineering</span>
+              </h1>
               <h2 style={{ margin: '0.5rem 0 0 0', fontSize: '2rem', fontWeight: '600', opacity: 0.9, lineHeight: '1.1' }}>Repository System</h2>
             </div>
             <img src="/plsp-logo.jpg" alt="PLSP" className="hero-logo" />
           </div>
-
-          {/* Mobile: logos on top, title below */}
+          {/* Mobile */}
           <div className="hero-logos-mobile">
             <div className="hero-logos-row">
               <img src="/coe-logo.jpg" alt="College of Engineering" className="hero-logo" />
               <img src="/plsp-logo.jpg" alt="PLSP" className="hero-logo" />
             </div>
             <div className="hero-logos-text" style={{ marginTop: '1rem' }}>
-              <h1 style={{ margin: 0, fontWeight: '700', lineHeight: '1.1' }}>College of Engineering</h1>
+              <h1 style={{ margin: 0, fontWeight: '700', lineHeight: '1.1' }}>College of <span style={{ color: '#f97316' }}>Engineering</span></h1>
               <h2 style={{ margin: '0.5rem 0 0 0', fontWeight: '600', opacity: 0.9, lineHeight: '1.1' }}>Repository System</h2>
             </div>
           </div>
+
           {/* Departments */}
           <div className="hero-departments">
             {[
@@ -119,8 +144,9 @@ const Home = () => {
             {quickAccessItems.map((item, index) => (
               <Link key={index} to={item.link} className="access-card" style={{ textDecoration: 'none', color: 'inherit' }}>
                 <div className="card-icon" style={{ backgroundColor: item.color }}>{item.icon}</div>
-                <h3 style={{ color: '#1e3a8a', marginBottom: '1rem' }}>{item.title}</h3>
-                <p style={{ color: '#64748b' }}>{item.description}</p>
+                <h3 style={{ color: '#1e3a8a', marginBottom: '0.5rem' }}>{item.title}</h3>
+                <p style={{ color: '#64748b', marginBottom: '1rem' }}>{item.description}</p>
+                <span style={{ color: '#f97316', fontSize: '0.85rem', fontWeight: '600' }}>Browse →</span>
               </Link>
             ))}
           </div>
@@ -133,10 +159,10 @@ const Home = () => {
           <h2 className="section-title">Repository Overview</h2>
           {!loading && stats ? (
             <div className="stats-grid">
-              <div className="stat-card fade-in fade-in-1"><div className="stat-number">{stats.total}</div><div className="stat-label">Total Projects</div></div>
-              <div className="stat-card fade-in fade-in-2"><div className="stat-number">{stats.departments}</div><div className="stat-label">Departments</div></div>
-              <div className="stat-card fade-in fade-in-3"><div className="stat-number">{stats.years}</div><div className="stat-label">Years of Research</div></div>
-              <div className="stat-card fade-in fade-in-4"><div className="stat-number">{stats.contributors}</div><div className="stat-label">Student Contributors</div></div>
+              <StatCard value={stats.total} label="Total Projects" delay={0.05} />
+              <StatCard value={stats.departments} label="Departments" delay={0.15} />
+              <StatCard value={stats.years} label="Years of Research" delay={0.25} />
+              <StatCard value={stats.contributors} label="Student Contributors" delay={0.35} />
             </div>
           ) : (
             <div className="stats-grid">
@@ -150,6 +176,39 @@ const Home = () => {
           )}
         </div>
       </section>
+
+      {/* Latest Projects */}
+      {latestProjects.length > 0 && (
+        <section style={{ padding: '4rem 0', background: 'white' }}>
+          <div className="container">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+              <h2 className="section-title" style={{ margin: 0 }}>Latest Projects</h2>
+              <Link to="/repository/all" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#f97316', fontWeight: '600', textDecoration: 'none', fontSize: '0.95rem' }}>
+                View All <ArrowRight size={16} />
+              </Link>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem' }}>
+              {latestProjects.map((project, i) => (
+                <Link key={project.id} to={`/project/${project.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+                  <div className={`project-card fade-in`} style={{ animationDelay: `${i * 0.1}s`, height: '100%' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.75rem' }}>
+                      <span style={{ background: project.department === 'Industrial Engineering' ? '#dbeafe' : '#ffedd5', color: project.department === 'Industrial Engineering' ? '#1e3a8a' : '#c2410c', padding: '0.2rem 0.6rem', borderRadius: '20px', fontSize: '0.75rem', fontWeight: '600' }}>
+                        {project.department}
+                      </span>
+                      <span style={{ color: '#94a3b8', fontSize: '0.8rem' }}>{project.year}</span>
+                    </div>
+                    <h3 className="project-title">{project.title}</h3>
+                    <p style={{ color: '#64748b', fontSize: '0.875rem', marginBottom: '1rem', flex: 1 }}>
+                      {project.authors}
+                    </p>
+                    <span style={{ color: '#f97316', fontSize: '0.85rem', fontWeight: '600' }}>View Project →</span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
     </div>
   );
 };
