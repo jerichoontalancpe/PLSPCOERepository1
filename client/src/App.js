@@ -9,6 +9,8 @@ import ProjectDetail from './pages/ProjectDetail';
 import About from './pages/About';
 import AdminLogin from './pages/AdminLogin';
 import AdminDashboard from './pages/AdminDashboard';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 import ProtectedRoute from './components/ProtectedRoute';
 import './App.css';
 
@@ -25,6 +27,8 @@ function App() {
               <Route path="/project/:id" element={<ProjectDetail />} />
               <Route path="/about" element={<About />} />
               <Route path="/admin/login" element={<AdminLogin />} />
+              <Route path="/admin/forgot-password" element={<ForgotPassword />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/admin/dashboard" element={
                 <ProtectedRoute>
                   <AdminDashboard />

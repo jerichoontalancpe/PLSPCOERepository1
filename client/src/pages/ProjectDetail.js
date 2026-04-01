@@ -169,7 +169,7 @@ const ProjectDetail = () => {
               fontSize: '0.9rem',
               fontWeight: '500'
             }}>
-              {project.status.charAt(0).toUpperCase() + project.status.slice(1)}
+              {project.status ? project.status.charAt(0).toUpperCase() + project.status.slice(1) : 'Unknown'}
             </span>
           </div>
         </div>
@@ -313,7 +313,7 @@ const ProjectDetail = () => {
                 <div>
                   <strong style={{ color: '#1e3a8a' }}>Status:</strong>
                   <div style={{ marginTop: '0.25rem' }}>
-                    {project.status.charAt(0).toUpperCase() + project.status.slice(1)}
+                    {project.status ? project.status.charAt(0).toUpperCase() + project.status.slice(1) : 'Unknown'}
                   </div>
                 </div>
                 

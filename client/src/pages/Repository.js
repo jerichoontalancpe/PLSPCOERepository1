@@ -27,121 +27,56 @@ const Repository = () => {
   const currentConfig = typeConfig[type] || typeConfig['all'];
 
   useEffect(() => {
-    // Get URL parameters for filtering
     const urlDepartment = searchParams.get('department');
     const urlType = searchParams.get('type');
-    
-    if (urlDepartment || urlType) {
-      setFilters(prev => ({
-        ...prev,
-        department: urlDepartment || '',
-        project_type: urlType || ''
-      }));
-    }
-    
+    const urlSearch = searchParams.get('search');
+
+    setFilters(prev => ({
+      ...prev,
+      department: urlDepartment || prev.department,
+      project_type: urlType || prev.project_type,
+      search: urlSearch || prev.search
+    }));
+  }, [type]);
+
+  useEffect(() => {
     fetchProjects();
-  }, [filters, type, searchParams]);
+  }, [filters]);
 
   const fetchProjects = async () => {
     try {
       setLoading(true);
-      
-      // Try API first, then fallback to localStorage, then use default data
+
       let projects = [];
-      
+
       try {
         const params = new URLSearchParams();
         if (filters.search) params.append('search', filters.search);
-        
-        const urlDepartment = searchParams.get('department');
-        const urlType = searchParams.get('type');
-        
-        if (urlDepartment) params.append('department', urlDepartment);
-        if (urlType) params.append('type', urlType);
-        
+        if (filters.department) params.append('department', filters.department);
+        if (filters.project_type) params.append('type', filters.project_type);
+
         const response = await axios.get(`/api/projects?${params}`);
         projects = response.data || [];
       } catch (apiError) {
         const savedProjects = localStorage.getItem('projects');
-        if (savedProjects) {
-          projects = JSON.parse(savedProjects);
-        } else {
-          // Default sample data
-          projects = [
-            {
-              id: 1,
-              title: 'Smart Campus Management System',
-              authors: 'John Doe, Jane Smith',
-              adviser: 'Dr. Maria Santos',
-              year: 2024,
-              abstract: 'A comprehensive IoT-based campus management system that integrates various campus services including attendance tracking, facility management, and resource optimization.',
-              keywords: 'IoT, campus management, smart systems, automation',
-              department: 'Computer Engineering',
-              project_type: 'Capstone',
-              status: 'completed'
-            },
-            {
-              id: 2,
-              title: 'Manufacturing Process Optimization Using Lean Six Sigma',
-              authors: 'Alice Johnson, Bob Wilson',
-              adviser: 'Prof. Carlos Rodriguez',
-              year: 2024,
-              abstract: 'Implementation of Lean Six Sigma methodologies to optimize manufacturing processes and reduce waste in local manufacturing companies.',
-              keywords: 'lean manufacturing, six sigma, process optimization, waste reduction',
-              department: 'Industrial Engineering',
-              project_type: 'Capstone',
-              status: 'completed'
-            },
-            {
-              id: 3,
-              title: 'Machine Learning Approaches in Quality Control',
-              authors: 'Sarah Chen, Michael Brown',
-              adviser: 'Dr. Lisa Garcia',
-              year: 2023,
-              abstract: 'Research on applying machine learning algorithms for automated quality control in manufacturing processes.',
-              keywords: 'machine learning, quality control, automation, manufacturing',
-              department: 'Computer Engineering',
-              project_type: 'Research',
-              status: 'completed'
-            },
-            {
-              id: 4,
-              title: 'Supply Chain Optimization for Small Enterprises',
-              authors: 'David Lee, Emma Davis',
-              adviser: 'Prof. Antonio Reyes',
-              year: 2023,
-              abstract: 'Development of supply chain optimization strategies specifically designed for small and medium enterprises.',
-              keywords: 'supply chain, optimization, SME, logistics',
-              department: 'Industrial Engineering',
-              project_type: 'Research',
-              status: 'completed'
-            }
-          ];
-          localStorage.setItem('projects', JSON.stringify(projects));
-        }
-        
-        // Apply filters manually
-        const urlDepartment = searchParams.get('department');
-        const urlType = searchParams.get('type');
-        
-        if (urlDepartment) {
-          projects = projects.filter(p => p.department === urlDepartment);
-        }
-        
-        if (urlType) {
-          projects = projects.filter(p => p.project_type === urlType);
-        }
-        
+        projects = savedProjects ? JSON.parse(savedProjects) : [];
+
+        if (filters.department) projects = projects.filter(p => p.department === filters.department);
+        if (filters.project_type) projects = projects.filter(p => p.project_type === filters.project_type);
         if (filters.search) {
-          const searchLower = filters.search.toLowerCase();
-          projects = projects.filter(p => 
-            p.title?.toLowerCase().includes(searchLower) ||
-            p.authors?.toLowerCase().includes(searchLower) ||
-            p.keywords?.toLowerCase().includes(searchLower)
+          const s = filters.search.toLowerCase();
+          projects = projects.filter(p =>
+            p.title?.toLowerCase().includes(s) ||
+            p.authors?.toLowerCase().includes(s) ||
+            p.keywords?.toLowerCase().includes(s)
           );
         }
       }
-      
+
+      // Apply year and status filters client-side
+      if (filters.year) projects = projects.filter(p => String(p.year) === String(filters.year));
+      if (filters.status) projects = projects.filter(p => p.status === filters.status);
+
       setProjects(projects);
     } catch (error) {
       console.error('Error fetching projects:', error);
@@ -182,15 +117,20 @@ const Repository = () => {
           
           {/* Search Bar */}
           <form onSubmit={handleSearch} className="search-container repository-search">
-            <div style={{ position: 'relative' }}>
-              <Search className="search-icon" size={20} />
-              <input
-                type="text"
-                placeholder="Search projects, authors, keywords..."
-                className="search-bar"
-                value={filters.search}
-                onChange={(e) => handleFilterChange('search', e.target.value)}
-              />
+            <div style={{ position: 'relative', display: 'flex', gap: '0.5rem' }}>
+              <div style={{ position: 'relative', flex: 1 }}>
+                <Search className="search-icon" size={20} />
+                <input
+                  type="text"
+                  placeholder="Search projects, authors, keywords..."
+                  className="search-bar"
+                  value={filters.search}
+                  onChange={(e) => handleFilterChange('search', e.target.value)}
+                />
+              </div>
+              <button type="submit" className="btn btn-primary" style={{ borderRadius: '50px', padding: '0.75rem 1.25rem', whiteSpace: 'nowrap' }}>
+                Search
+              </button>
             </div>
           </form>
 
@@ -271,7 +211,7 @@ const Repository = () => {
                     <span><User size={16} /> {project.authors}</span>
                     <span><Calendar size={16} /> {project.year}</span>
                     <span style={{ 
-                      background: project.department === 'IE' ? '#1e3a8a' : '#f97316',
+                      background: project.department === 'Industrial Engineering' ? '#1e3a8a' : '#f97316',
                       color: 'white',
                       padding: '0.25rem 0.5rem',
                       borderRadius: '4px',
