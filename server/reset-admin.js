@@ -1,30 +1,33 @@
 const bcrypt = require('bcryptjs');
-const { db } = require('./database');
+const { createClient } = require('@supabase/supabase-js');
+require('dotenv').config();
 
-// Get new password from command line argument
-const newPassword = process.argv[2];
+const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
 
-if (!newPassword) {
-  console.log('Usage: node reset-admin.js <new-password>');
-  console.log('Example: node reset-admin.js mynewpassword123');
+const username = process.argv[2] || 'admin';
+const password = process.argv[3];
+
+if (!password) {
+  console.log('Usage: node reset-admin.js <username> <password>');
+  console.log('Example: node reset-admin.js admin MyNewPassword123');
   process.exit(1);
 }
 
-// Hash the new password
-const hashedPassword = bcrypt.hashSync(newPassword, 10);
+(async () => {
+  const hashed = bcrypt.hashSync(password, 10);
 
-// Update admin password
-db.run('UPDATE users SET password = ? WHERE username = ?', [hashedPassword, 'admin'], function(err) {
-  if (err) {
-    console.error('Error updating password:', err);
-  } else if (this.changes === 0) {
-    console.log('Admin user not found');
+  // Check if user exists
+  const { data: existing } = await supabase.from('users').select('id').eq('username', username).single();
+
+  if (existing) {
+    const { error } = await supabase.from('users').update({ password: hashed }).eq('username', username);
+    if (error) { console.error('❌ Error updating user:', error.message); process.exit(1); }
+    console.log(`✅ Password updated for user: ${username}`);
   } else {
-    console.log('✅ Admin password updated successfully!');
-    console.log('New credentials:');
-    console.log('Username: admin');
-    console.log('Password:', newPassword);
+    const { error } = await supabase.from('users').insert([{ username, password: hashed, role: 'admin', email: `${username}@plsp.edu.ph` }]);
+    if (error) { console.error('❌ Error creating user:', error.message); process.exit(1); }
+    console.log(`✅ Admin user created: ${username}`);
   }
-  
-  db.close();
-});
+
+  console.log(`\nCredentials:\n  Username: ${username}\n  Password: ${password}`);
+})();
