@@ -1,6 +1,6 @@
 const express = require('express');
 const multer = require('multer');
-const { supabase } = require('../database');
+const { supabase, supabaseAdmin } = require('../database');
 
 const router = express.Router();
 
@@ -30,13 +30,13 @@ router.post('/', upload.single('image'), async (req, res) => {
     if (req.file) {
       const ext = req.file.mimetype.split('/')[1];
       const filename = `achievements/${Date.now()}-${Math.round(Math.random() * 1e9)}.${ext}`;
-      const { error: uploadError } = await supabase.storage
+      const { error: uploadError } = await supabaseAdmin.storage
         .from('Images')
         .upload(filename, req.file.buffer, { contentType: req.file.mimetype });
       if (uploadError) {
         console.error('Image upload error:', uploadError.message);
       } else {
-        const { data: urlData } = supabase.storage.from('Images').getPublicUrl(filename);
+        const { data: urlData } = supabaseAdmin.storage.from('Images').getPublicUrl(filename);
         image_url = urlData.publicUrl;
       }
     }
@@ -62,13 +62,13 @@ router.put('/:id', upload.single('image'), async (req, res) => {
     if (req.file) {
       const ext = req.file.mimetype.split('/')[1];
       const filename = `achievements/${Date.now()}-${Math.round(Math.random() * 1e9)}.${ext}`;
-      const { error: uploadError } = await supabase.storage
+      const { error: uploadError } = await supabaseAdmin.storage
         .from('Images')
         .upload(filename, req.file.buffer, { contentType: req.file.mimetype });
       if (uploadError) {
         console.error('Image upload error:', uploadError.message);
       } else {
-        const { data: urlData } = supabase.storage.from('Images').getPublicUrl(filename);
+        const { data: urlData } = supabaseAdmin.storage.from('Images').getPublicUrl(filename);
         updateData.image_filename = urlData.publicUrl;
       }
     }

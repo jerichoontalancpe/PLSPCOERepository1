@@ -1,7 +1,7 @@
 const express = require('express');
 const multer = require('multer');
 const path = require('path');
-const { supabase } = require('../database');
+const { supabase, supabaseAdmin } = require('../database');
 
 const router = express.Router();
 
@@ -63,11 +63,11 @@ router.post('/', upload.single('pdf'), async (req, res) => {
   try {
     if (req.file) {
       const filename = `${Date.now()}-${Math.round(Math.random() * 1e9)}.pdf`;
-      const { error: uploadError } = await supabase.storage
+      const { error: uploadError } = await supabaseAdmin.storage
         .from("PDF's")
         .upload(filename, req.file.buffer, { contentType: 'application/pdf' });
       if (!uploadError) {
-        const { data: urlData } = supabase.storage.from("PDF's").getPublicUrl(filename);
+        const { data: urlData } = supabaseAdmin.storage.from("PDF's").getPublicUrl(filename);
         pdf_url = urlData.publicUrl;
       }
     }
@@ -99,11 +99,11 @@ router.put('/:id', upload.single('pdf'), async (req, res) => {
 
     if (req.file) {
       const filename = `${Date.now()}-${Math.round(Math.random() * 1e9)}.pdf`;
-      const { error: uploadError } = await supabase.storage
+      const { error: uploadError } = await supabaseAdmin.storage
         .from("PDF's")
         .upload(filename, req.file.buffer, { contentType: 'application/pdf' });
       if (!uploadError) {
-        const { data: urlData } = supabase.storage.from("PDF's").getPublicUrl(filename);
+        const { data: urlData } = supabaseAdmin.storage.from("PDF's").getPublicUrl(filename);
         updateData.pdf_filename = urlData.publicUrl;
       }
     }
